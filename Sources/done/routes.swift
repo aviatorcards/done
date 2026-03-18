@@ -2,13 +2,38 @@ import Fluent
 import Vapor
 
 func routes(_ app: Application) throws {
-    app.get { req async throws in
-        try await req.view.render("index", ["title": "Hello Vapor!"])
+    app.get("login") { req async throws -> View in
+        try await req.view.render("login", ["title": "Login"])
+    }
+    app.get("register") { req async throws -> View in
+        try await req.view.render("register", ["title": "Register"])
+    }
+    
+    app.get { req async throws -> Response in
+        if let _ = req.cookies["token"] {
+            return req.redirect(to: "/boards")
+        }
+        let context: [String: AnySendable] = [
+            "title": AnySendable("My Boards"),
+            "boards": AnySendable([Board]())
+        ]
+        return try await req.view.render("index", context).encodeResponse(for: req)
     }
 
     app.get("hello") { req async -> String in
         "Hello, world!"
     }
 
-    try app.register(collection: TodoController())
+    try app.register(collection: AuthController())
+    try app.register(collection: BoardController())
+    try app.register(collection: ColumnController())
+    try app.register(collection: CardController())
+
+    app.webSocket("board", ":boardID", "live") { req, ws in
+        guard let boardID = req.parameters.get("boardID", as: UUID.self) else {
+            ws.close(promise: nil)
+            return
+        }
+        req.application.webSocketManager.connect(boardID: boardID, ws: ws)
+    }
 }

@@ -10,3 +10,7 @@ db.sqlite
 .env.*
 !.env.example
 default.profraw
+.vscode/
+.claude/
+.gemini/
+.cursor/

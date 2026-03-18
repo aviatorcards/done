@@ -1,0 +1,87 @@
+<div id="card-edit-modal" 
+     x-data="{ show: true }" 
+     x-show="show" 
+     class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm"
+     x-transition:enter="transition ease-out duration-300"
+     x-transition:enter-start="opacity-0"
+     x-transition:enter-end="opacity-100"
+     x-cloak>
+    <div @click.away="show = false; setTimeout(() => document.getElementById('card-edit-modal').remove(), 300)" 
+         class="glass w-full max-w-lg p-8 rounded-[2.5rem] shadow-2xl space-y-6"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+         x-transition:enter-end="opacity-100 scale-100 translate-y-0">
+        
+        <div class="flex justify-between items-center">
+            <h2 class="text-2xl font-bold text-slate-800 dark:text-white">Edit Card</h2>
+            <div class="flex items-center gap-2">
+                <button hx-delete="/cards/#(card.id)"
+                        hx-confirm="Are you sure you want to delete this card?"
+                        hx-on::after-request="if(event.detail.successful) window.location.reload()"
+                        class="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-colors text-red-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                </button>
+                <button @click="show = false; setTimeout(() => document.getElementById('card-edit-modal').remove(), 300)" class="p-2 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-full transition-colors text-slate-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <form hx-patch="/cards/#(card.id)" 
+              hx-ext="json-enc"
+              :hx-vals="`js:{is_completed: document.getElementById('edit-completed').checked}`"
+              hx-swap="none"
+              hx-on::after-request="if(event.detail.successful) { window.location.reload(); }"
+              class="space-y-6">
+            
+            <div class="space-y-2">
+                <label class="text-sm font-semibold text-slate-700 dark:text-zinc-300 ml-1">Card Title</label>
+                <input type="text" name="title" value="#(card.title)" required 
+                       class="w-full px-5 py-4 rounded-2xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-all">
+            </div>
+
+            <div class="space-y-2">
+                <label class="text-sm font-semibold text-slate-700 dark:text-zinc-300 ml-1">Description</label>
+                <textarea name="description" rows="3" 
+                          class="w-full px-5 py-4 rounded-2xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-all resize-none">#(card.description)</textarea>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-2">
+                    <label class="text-sm font-semibold text-slate-700 dark:text-zinc-300 ml-1">Priority</label>
+                    <select name="priority" class="w-full px-5 py-4 rounded-2xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 focus:border-brand-500 outline-none transition-all">
+                        <option value="low" #if(card.priority == "low"): selected #endif>Low</option>
+                        <option value="medium" #if(card.priority == "medium"): selected #endif>Medium</option>
+                        <option value="high" #if(card.priority == "high"): selected #endif>High</option>
+                    </select>
+                </div>
+                <div class="space-y-2">
+                    <label class="text-sm font-semibold text-slate-700 dark:text-zinc-300 ml-1">Due Date</label>
+                    <input type="date" name="dueDate" value="#(card.dueDate)" 
+                           class="w-full px-5 py-4 rounded-2xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 focus:border-brand-500 outline-none transition-all">
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3 px-1">
+                <input type="checkbox" name="is_completed" id="edit-completed" #if(card.is_completed): checked #endif
+                       class="w-5 h-5 rounded-lg border-slate-200 text-brand-600 focus:ring-brand-500 transition-all">
+                <label for="edit-completed" class="text-sm font-semibold text-slate-700 dark:text-zinc-300 cursor-pointer select-none">Mark as Completed</label>
+            </div>
+
+            <div class="flex gap-3 pt-4">
+                <button type="button" @click="show = false; setTimeout(() => document.getElementById('card-edit-modal').remove(), 300)" 
+                        class="flex-1 px-6 py-4 rounded-2xl font-bold text-slate-600 hover:bg-slate-100 transition-colors">
+                    Cancel
+                </button>
+                <button type="submit"
+                        class="flex-1 bg-brand-600 hover:bg-brand-700 text-white px-6 py-4 rounded-2xl font-bold transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

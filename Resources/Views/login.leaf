@@ -1,0 +1,70 @@
+#extend("base"):
+    #export("body"):
+        <div class="min-h-[80vh] flex items-center justify-center p-4">
+            <div class="glass max-w-md w-full p-10 rounded-[2.5rem] shadow-2xl space-y-8" x-data="{ loading: false, error: '' }">
+                <div class="text-center">
+                    <img src="/images/logo.png" alt="Done. Logo" class="w-20 h-20 rounded-[2rem] mx-auto mb-6 shadow-xl ring-4 ring-white/10">
+                    <h1 class="text-3xl font-black text-slate-800 dark:text-white tracking-tight">Welcome Back</h1>
+                    <p class="text-slate-500 dark:text-zinc-300 mt-2 font-medium">Sign in to manage your boards</p>
+                </div>
+
+                <form class="space-y-6" @submit.prevent="
+                    loading = true;
+                    error = '';
+                    const formData = new FormData($el);
+                    const data = Object.fromEntries(formData.entries());
+                    
+                    fetch('/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    })
+                    .then(res => res.json())
+                    .then(json => {
+                        if (json.token) {
+                            localStorage.setItem('token', json.token);
+                            window.location.href = '/';
+                        } else {
+                            error = json.reason || 'Invalid email or password';
+                        }
+                    })
+                    .catch(err => error = 'An error occurred. Please try again.')
+                    .finally(() => loading = false);
+                ">
+                    <div class="space-y-2">
+                        <label class="text-sm font-bold text-slate-800 dark:text-zinc-200 ml-1">Email Address</label>
+                        <input type="email" name="email" required placeholder="name@example.com" 
+                               class="w-full px-5 py-4 rounded-2xl bg-white/50 dark:bg-black/20 border border-slate-200 dark:border-white/10 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 outline-none transition-all dark:text-white">
+                    </div>
+
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center ml-1">
+                            <label class="text-sm font-bold text-slate-800 dark:text-zinc-200">Password</label>
+                            <a href="#" class="text-xs font-bold text-brand-600 dark:text-brand-400 hover:text-brand-700 transition-colors">Forgot Password?</a>
+                        </div>
+                        <input type="password" name="password" required placeholder="••••••••" 
+                               class="w-full px-5 py-4 rounded-2xl bg-white/50 dark:bg-black/20 border border-slate-200 dark:border-white/10 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 outline-none transition-all dark:text-white">
+                    </div>
+
+                    <div x-show="error" x-text="error" class="text-red-500 text-sm font-medium text-center bg-red-50 dark:bg-red-900/20 py-3 rounded-xl border border-red-100 dark:border-red-900/30" x-cloak></div>
+
+                    <button type="submit" :disabled="loading" 
+                            class="w-full bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white py-4 rounded-2xl font-bold transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center justify-center gap-3">
+                        <template x-if="loading">
+                            <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </template>
+                        <span x-text="loading ? 'Signing in...' : 'Sign In'"></span>
+                    </button>
+                </form>
+
+                <p class="text-center text-slate-500 dark:text-zinc-400 text-sm font-medium">
+                    Don't have an account? 
+                    <a href="/register" class="text-brand-600 font-bold hover:underline">Create Account</a>
+                </p>
+            </div>
+        </div>
+    #endexport
+#endextend
