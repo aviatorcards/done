@@ -8,6 +8,7 @@ struct ColumnController: RouteCollection {
         columns.group(":columnID") { column in
             column.patch(use: update)
             column.delete(use: delete)
+            column.post("move", use: move)
         }
     }
 
@@ -43,7 +44,7 @@ struct ColumnController: RouteCollection {
         return column
     }
 
-    func delete(req: Request) async throws -> HTTPStatus {
+    func delete(req: Request) async throws -> Response {
         let userID = try req.auth.require(UserPayload.self).userID
         guard let column = try await Column.find(req.parameters.get("columnID"), on: req.db) else {
             throw Abort(.notFound)
@@ -86,6 +87,31 @@ struct ColumnController: RouteCollection {
         }
             
         try await column.delete(on: req.db)
-        return .noContent
+        return Response(status: .ok)
+    }
+
+    func move(req: Request) async throws -> Response {
+        let userID = try req.auth.require(UserPayload.self).userID
+        let dto = try req.content.decode(ColumnDTO.self)
+        guard let column = try await Column.find(req.parameters.get("columnID"), on: req.db) else {
+            throw Abort(.notFound)
+        }
+        
+        let board = try await column.$board.get(on: req.db)
+        guard board.$owner.id == userID else {
+            throw Abort(.forbidden)
+        }
+        
+        if let position = dto.position {
+            column.position = position
+            try await column.save(on: req.db)
+            
+            // Broadcast update
+            if let boardID = board.id {
+                req.application.webSocketManager.broadcast(boardID: boardID, message: "board_updated")
+            }
+        }
+        
+        return Response(status: .ok)
     }
 }

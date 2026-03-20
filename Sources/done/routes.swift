@@ -13,11 +13,7 @@ func routes(_ app: Application) throws {
         if let _ = req.cookies["token"] {
             return req.redirect(to: "/boards")
         }
-        let context: [String: AnySendable] = [
-            "title": AnySendable("My Boards"),
-            "boards": AnySendable([Board]())
-        ]
-        return try await req.view.render("index", context).encodeResponse(for: req)
+        return try await req.view.render("landing", ["title": "Organize Your Life"]).encodeResponse(for: req)
     }
 
     app.get("hello") { req async -> String in
@@ -28,6 +24,7 @@ func routes(_ app: Application) throws {
     try app.register(collection: BoardController())
     try app.register(collection: ColumnController())
     try app.register(collection: CardController())
+    try app.register(collection: UserController())
 
     app.webSocket("board", ":boardID", "live") { req, ws in
         guard let boardID = req.parameters.get("boardID", as: UUID.self) else {

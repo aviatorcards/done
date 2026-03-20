@@ -1,4 +1,4 @@
-<div class="card bg-white dark:bg-zinc-800 p-5 rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-200/50 dark:border-zinc-700/50 cursor-grab active:cursor-grabbing group/card"
+<div class="card bg-white dark:bg-obsidian-800 p-5 rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-200/50 dark:border-obsidian-700/50 cursor-grab active:cursor-grabbing group/card"
      data-id="#(card.id)"
      hx-get="/cards/#(card.id)/edit"
      hx-target="body"
@@ -13,7 +13,7 @@
                         </svg>
                     </div>
                 #endif
-                <h4 class="font-bold text-slate-800 dark:text-zinc-100 leading-tight group-hover/card:text-brand-600 transition-colors #if(card.is_completed): line-through text-slate-400 #endif">#(card.title)</h4>
+                <h4 class="font-bold text-slate-800 dark:text-slate-100 leading-tight group-hover/card:text-brand-600 transition-colors #if(card.is_completed): line-through text-slate-400 #endif">#(card.title)</h4>
             </div>
             <div class="flex items-center gap-1 opacity-0 group-hover/card:opacity-100 transition-opacity">
                 #if(!card.is_completed):
@@ -51,7 +51,7 @@
             </div>
         </div>
         
-        <p class="text-xs text-slate-500 dark:text-zinc-500 line-clamp-2">#(card.description)</p>
+        <p class="text-xs text-slate-500 dark:text-slate-400/80 line-clamp-2">#(card.description)</p>
         
         <div class="flex flex-wrap gap-2 mt-2">
             <span class="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg #(card.priorityDisplay.class)">
@@ -74,8 +74,14 @@
                 #endfor
             </div>
             <div class="flex items-center gap-2">
-                <div class="w-6 h-6 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 dark:from-zinc-700 dark:to-zinc-800 flex items-center justify-center text-[8px] font-black text-slate-600 dark:text-zinc-400">
-                    U
+                <div class="w-6 h-6 rounded-lg overflow-hidden bg-gradient-to-br from-slate-200 to-slate-300 dark:from-obsidian-700 dark:to-obsidian-800 flex items-center justify-center text-[8px] font-black text-slate-600 dark:text-slate-400">
+                    #if(card.safeAssignee.avatarUrl):
+                        <img src="#(card.safeAssignee.avatarUrl)" alt="Avatar" class="w-full h-full object-cover">
+                    #elseif(card.safeAssignee):
+                        #(card.safeAssignee.initials)
+                    #else:
+                        U
+                    #endif
                 </div>
             </div>
         </div>

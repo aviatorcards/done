@@ -1,8 +1,13 @@
-<div class="min-w-[320px] max-w-[320px] flex flex-col h-full bg-slate-100/50 dark:bg-zinc-900/50 rounded-[2.5rem] p-4 group/column">
+<div class="min-w-[320px] max-w-[320px] flex flex-col h-full bg-slate-100/50 dark:bg-obsidian-900/50 rounded-[2.5rem] p-4 group/column column-item" data-column-id="#(column.id)">
     <div class="px-4 py-2 mb-4 flex justify-between items-center relative group/col-header">
         <div class="flex items-center gap-3">
+            <div class="cursor-grab active:cursor-grabbing text-slate-400 opacity-0 group-hover/column:opacity-100 transition-opacity">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
+                </svg>
+            </div>
             <h3 class="font-black text-slate-800 dark:text-white uppercase tracking-widest text-sm">#(column.title)</h3>
-            <span class="bg-slate-200 dark:bg-zinc-800 text-slate-500 px-3 py-1 rounded-full text-xs font-bold">#(count(column.cards))</span>
+            <span class="bg-slate-200 dark:bg-obsidian-800 text-slate-500 px-3 py-1 rounded-full text-xs font-bold">#(count(column.cards))</span>
         </div>
         <button 
             class="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all opacity-0 group-hover/column:opacity-100"
@@ -24,7 +29,7 @@
         #endfor
     </div>
     
-    <button class="mt-4 w-full py-4 bg-white dark:bg-zinc-800 hover:bg-brand-50 dark:hover:bg-brand-900/20 text-slate-600 dark:text-zinc-300 rounded-2xl transition-all shadow-sm hover:shadow group-hover/column:opacity-100 opacity-60 flex items-center justify-center gap-2 font-bold"
+    <button class="mt-4 w-full py-4 bg-white dark:bg-obsidian-800 hover:bg-brand-50 dark:hover:bg-brand-900/20 text-slate-600 dark:text-zinc-300 rounded-2xl transition-all shadow-sm hover:shadow group-hover/column:opacity-100 opacity-60 flex items-center justify-center gap-2 font-bold"
             hx-get="/cards/new?columnID=#(column.id)"
             hx-target="body"
             hx-swap="beforeend">

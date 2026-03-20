@@ -10,6 +10,9 @@ public func configure(_ app: Application) async throws {
     // serve files from /Public folder
     app.middleware.use(FileMiddleware(publicDirectory: app.directory.publicDirectory))
 
+    // Set max body size for file uploads (10MB)
+    app.routes.defaultMaxBodySize = "10mb"
+
     // Use SQLite by default for development convenience
     app.databases.use(.sqlite(.file("done.sqlite")), as: .sqlite)
     
@@ -26,6 +29,7 @@ public func configure(_ app: Application) async throws {
     }
 
     app.migrations.add(CreateUser())
+    app.migrations.add(AddAvatarToUser())
     app.migrations.add(CreateBoard())
     app.migrations.add(CreateColumn())
     app.migrations.add(CreateCard())

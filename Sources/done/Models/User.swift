@@ -16,6 +16,9 @@ final class User: Model, Content, Authenticatable, @unchecked Sendable {
     @Field(key: "password_hash")
     var passwordHash: String
     
+    @Field(key: "avatar_url")
+    var avatarUrl: String?
+    
     @Timestamp(key: "created_at", on: .create)
     var createdAt: Date?
     
@@ -24,11 +27,12 @@ final class User: Model, Content, Authenticatable, @unchecked Sendable {
     
     init() { }
     
-    init(id: UUID? = nil, username: String, email: String, passwordHash: String) {
+    init(id: UUID? = nil, username: String, email: String, passwordHash: String, avatarUrl: String? = nil) {
         self.id = id
         self.username = username
         self.email = email
         self.passwordHash = passwordHash
+        self.avatarUrl = avatarUrl
     }
 
     var initials: String {
@@ -54,7 +58,7 @@ extension User {
     }
     
     func toPublic() -> UserDTO.Public {
-        .init(id: self.id, username: self.username, email: self.email)
+        .init(id: self.id, username: self.username, email: self.email, avatarUrl: self.avatarUrl)
     }
 }
 

@@ -6,6 +6,9 @@ struct AuthMiddleware: AsyncMiddleware {
         let token = request.headers.bearerAuthorization?.token ?? request.cookies["token"]?.string
         
         guard let token = token else {
+            if request.headers.first(name: .accept)?.contains("text/html") ?? false && !request.headers.contains(name: "HX-Request") {
+                return request.redirect(to: "/login")
+            }
             throw Abort(.unauthorized)
         }
         
@@ -13,6 +16,9 @@ struct AuthMiddleware: AsyncMiddleware {
             let payload = try request.jwt.verify(token, as: UserPayload.self)
             request.auth.login(payload)
         } catch {
+            if request.headers.first(name: .accept)?.contains("text/html") ?? false && !request.headers.contains(name: "HX-Request") {
+                return request.redirect(to: "/login")
+            }
             throw Abort(.unauthorized)
         }
         

@@ -10,7 +10,7 @@
                         </div>
                         <div class="mt-8 flex items-center justify-between">
                             <div class="flex -space-x-2">
-                                <div class="w-8 h-8 rounded-full border-2 border-white dark:border-zinc-800 bg-brand-200 flex items-center justify-center text-[10px] font-bold">#(board.owner.initials)</div>
+                                <div class="w-8 h-8 rounded-full border-2 border-white dark:border-obsidian-800 bg-brand-200 flex items-center justify-center text-[10px] font-bold">#(board.owner.initials)</div>
                             </div>
                             <span class="text-brand-600 font-medium flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                 Open Board
@@ -38,7 +38,7 @@
         #endfor
     #else:
         <div class="col-span-full py-20 text-center">
-            <div class="w-20 h-20 bg-slate-100 dark:bg-zinc-800 rounded-3xl flex items-center justify-center mx-auto mb-6">
+            <div class="w-20 h-20 bg-slate-100 dark:bg-obsidian-800 rounded-3xl flex items-center justify-center mx-auto mb-6">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>

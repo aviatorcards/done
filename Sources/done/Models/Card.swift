@@ -78,7 +78,7 @@ final class Card: Model, Content, @unchecked Sendable {
 
     enum CodingKeys: String, CodingKey {
         case id, title, description, position, dueDate = "due_date", priority, isCompleted = "is_completed", column, assignee, labels, comments, createdAt = "created_at", updatedAt = "updated_at"
-        case formattedDueDate, priorityDisplay, safeLabels
+        case formattedDueDate, priorityDisplay, safeLabels, safeAssignee
     }
 
     func encode(to encoder: any Encoder) throws {
@@ -97,6 +97,7 @@ final class Card: Model, Content, @unchecked Sendable {
         
         // Always encode labels as an array for Leaf
         try container.encode(self.$labels.value ?? [], forKey: .safeLabels)
+        try container.encode(self.$assignee.value, forKey: .safeAssignee)
         
         if let createdAt = createdAt { try container.encode(createdAt, forKey: .createdAt) }
         if let updatedAt = updatedAt { try container.encode(updatedAt, forKey: .updatedAt) }

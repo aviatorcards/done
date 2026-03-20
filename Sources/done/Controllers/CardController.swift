@@ -82,7 +82,7 @@ struct CardController: RouteCollection {
         ])
     }
 
-    func delete(req: Request) async throws -> HTTPStatus {
+    func delete(req: Request) async throws -> Response {
         let userID = try req.auth.require(UserPayload.self).userID
         guard let card = try await Card.find(req.parameters.get("cardID"), on: req.db) else {
             throw Abort(.notFound)
@@ -112,7 +112,7 @@ struct CardController: RouteCollection {
         }
             
         try await card.delete(on: req.db)
-        return .noContent
+        return Response(status: .ok)
     }
 
     func new(req: Request) async throws -> View {

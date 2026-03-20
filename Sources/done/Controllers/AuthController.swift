@@ -6,6 +6,13 @@ struct AuthController: RouteCollection {
         let auth = routes.grouped("auth")
         auth.post("register", use: register)
         auth.post("login", use: login)
+        auth.get("logout", use: logout)
+    }
+
+    func logout(req: Request) async throws -> Response {
+        let response = req.redirect(to: "/")
+        response.cookies["token"] = .init(string: "", expires: Date(timeIntervalSince1970: 0), isSecure: false, isHTTPOnly: true)
+        return response
     }
 
     func register(req: Request) async throws -> Response {
@@ -21,7 +28,7 @@ struct AuthController: RouteCollection {
         try await user.save(on: req.db)
         
         let payload = UserPayload(
-            subject: .init(value: user.username),
+            subject: .init(value: user.email),
             expiration: .init(value: Date().addingTimeInterval(24 * 60 * 60)),
             userID: try user.requireID()
         )
@@ -49,7 +56,7 @@ struct AuthController: RouteCollection {
         }
         
         let payload = UserPayload(
-            subject: .init(value: user.username),
+            subject: .init(value: user.email),
             expiration: .init(value: Date().addingTimeInterval(24 * 60 * 60)),
             userID: try user.requireID()
         )

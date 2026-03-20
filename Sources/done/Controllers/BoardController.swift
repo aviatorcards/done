@@ -74,6 +74,11 @@ struct BoardController: RouteCollection {
             throw Abort(.unauthorized)
         }
         
+        // Ensure the user owns the board
+        guard board.$owner.id == userID else {
+            throw Abort(.forbidden)
+        }
+        
         let context: [String: AnySendable] = [
             "title": .init(board.title),
             "board": .init(board),
@@ -84,7 +89,7 @@ struct BoardController: RouteCollection {
         return try await req.view.render("board", context)
     }
 
-    func delete(req: Request) async throws -> HTTPStatus {
+    func delete(req: Request) async throws -> Response {
         let userID = try req.auth.require(UserPayload.self).userID
         guard let board = try await Board.find(req.parameters.get("boardID"), on: req.db) else {
             throw Abort(.notFound)
@@ -138,6 +143,6 @@ struct BoardController: RouteCollection {
         req.application.webSocketManager.broadcast(boardID: boardID, message: "board_deleted")
             
         try await board.delete(on: req.db)
-        return .noContent
+        return Response(status: .ok)
     }
 }
