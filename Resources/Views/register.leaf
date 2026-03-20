@@ -3,82 +3,28 @@
         <div class="min-h-[80vh] flex items-center justify-center p-4">
             <div class="glass max-w-md w-full p-10 rounded-[2.5rem] shadow-2xl space-y-8" x-data="{ loading: false, error: '' }">
                 <div class="text-center">
-                    <img src="/images/logo.png" alt="Done. Logo" class="w-20 h-20 rounded-[2rem] mx-auto mb-6 shadow-xl ring-4 ring-white/10">
+                    <img :src="darkMode ? '/images/logo_dark.png' : '/images/logo.png'" alt="Done. Logo" class="w-20 h-20 rounded-[2rem] mx-auto mb-6 shadow-xl ring-4 ring-white/10">
                     <h1 class="text-3xl font-black text-slate-800 dark:text-white tracking-tight">Create Account</h1>
                     <p class="text-slate-500 dark:text-slate-400 mt-2 font-medium">Start organizing your projects today</p>
                 </div>
 
-                <form class="space-y-4" @submit.prevent="
-                    loading = true;
-                    error = '';
-                    const formData = new FormData($el);
-                    const data = Object.fromEntries(formData.entries());
-                    
-                    fetch('/auth/register', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(data)
-                    })
-                    .then(async res => {
-                        const json = await res.json();
-                        if (res.ok) {
-                            // After register, auto login
-                            fetch('/auth/login', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ email: data.email, password: data.password })
-                            })
-                            .then(res => res.json())
-                            .then(json => {
-                                if (json.token) {
-                                    localStorage.setItem('token', json.token);
-                                    window.location.href = '/';
-                                }
-                            });
-                        } else {
-                            error = json.reason || 'Registration failed';
-                        }
-                    })
-                    .catch(err => error = 'An error occurred. Please try again.')
-                    .finally(() => loading = false);
-                ">
-                    <div class="space-y-1">
-                        <label class="text-sm font-bold text-slate-800 dark:text-slate-200 ml-1">Username</label>
-                        <input type="text" name="username" required placeholder="tristan" 
-                               class="w-full px-5 py-3.5 rounded-2xl bg-white/50 dark:bg-black/20 border border-slate-200 dark:border-white/10 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 outline-none transition-all dark:text-white">
-                    </div>
-
-                    <div class="space-y-1">
-                        <label class="text-sm font-bold text-slate-800 dark:text-slate-200 ml-1">Email Address</label>
-                        <input type="email" name="email" required placeholder="name@example.com" 
-                               class="w-full px-5 py-3.5 rounded-2xl bg-white/50 dark:bg-black/20 border border-slate-200 dark:border-white/10 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 outline-none transition-all dark:text-white">
-                    </div>
-
-                    <div class="space-y-1">
-                        <label class="text-sm font-bold text-slate-800 dark:text-slate-200 ml-1">Password</label>
-                        <input type="password" name="password" required placeholder="••••••••" 
-                               class="w-full px-5 py-3.5 rounded-2xl bg-white/50 dark:bg-black/20 border border-slate-200 dark:border-white/10 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 outline-none transition-all dark:text-white">
-                    </div>
-
-                    <div class="space-y-1">
-                        <label class="text-sm font-bold text-slate-800 dark:text-slate-200 ml-1">Confirm Password</label>
-                        <input type="password" name="confirmPassword" required placeholder="••••••••" 
-                               class="w-full px-5 py-3.5 rounded-2xl bg-white/50 dark:bg-black/20 border border-slate-200 dark:border-white/10 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 outline-none transition-all dark:text-white">
-                    </div>
-
-                    <div x-show="error" x-text="error" class="text-red-500 text-sm font-medium text-center bg-red-50 dark:bg-red-900/20 py-3 rounded-xl border border-red-100 dark:border-red-900/30" x-cloak></div>
-
-                    <button type="submit" :disabled="loading" 
-                            class="w-full bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white py-4 rounded-2xl font-bold transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center justify-center gap-3 mt-4">
-                        <template x-if="loading">
-                            <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <div class="space-y-6 py-8">
+                    <div class="p-6 rounded-3xl bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/30 text-amber-800 dark:text-amber-200">
+                        <div class="flex items-center gap-3 mb-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                             </svg>
-                        </template>
-                        <span x-text="loading ? 'Creating Account...' : 'Create Account'"></span>
-                    </button>
-                </form>
+                            <span class="font-black uppercase tracking-wider text-xs">Access Restricted</span>
+                        </div>
+                        <p class="text-sm font-bold leading-relaxed">
+                            Public registration is currently closed. If you have an account, please sign in.
+                        </p>
+                    </div>
+
+                    <a href="/login" class="w-full bg-brand-600 hover:bg-brand-700 text-white py-4 rounded-2xl font-bold transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center justify-center gap-3">
+                        Return to Sign In
+                    </a>
+                </div>
 
                 <p class="text-center text-slate-500 dark:text-slate-400 text-sm font-medium">
                     Already have an account? 

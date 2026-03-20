@@ -16,7 +16,8 @@ struct AuthController: RouteCollection {
     }
 
     func register(req: Request) async throws -> Response {
-        try UserDTO.validate(content: req)
+        throw Abort(.forbidden, reason: "Public registration is currently closed.")
+        // Dead code for now...
         let dto = try req.content.decode(UserDTO.self)
         
         guard let password = dto.password, !password.isEmpty else {

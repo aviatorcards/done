@@ -3,7 +3,7 @@
         <div class="min-h-[80vh] flex items-center justify-center p-4">
             <div class="glass max-w-md w-full p-10 rounded-[2.5rem] shadow-2xl space-y-8" x-data="{ loading: false, error: '' }">
                 <div class="text-center">
-                    <img src="/images/logo.png" alt="Done. Logo" class="w-20 h-20 rounded-[2rem] mx-auto mb-6 shadow-xl ring-4 ring-white/10">
+                    <img :src="darkMode ? '/images/logo_dark.png' : '/images/logo.png'" alt="Done. Logo" class="w-20 h-20 rounded-[2rem] mx-auto mb-6 shadow-xl ring-4 ring-white/10">
                     <h1 class="text-3xl font-black text-slate-800 dark:text-white tracking-tight">Welcome Back</h1>
                     <p class="text-slate-500 dark:text-slate-400 mt-2 font-medium">Sign in to manage your boards</p>
                 </div>
@@ -60,10 +60,6 @@
                     </button>
                 </form>
 
-                <p class="text-center text-slate-500 dark:text-slate-400 text-sm font-medium">
-                    Don't have an account? 
-                    <a href="/register" class="text-brand-600 font-bold hover:underline">Create Account</a>
-                </p>
             </div>
         </div>
     #endexport
