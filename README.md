@@ -37,7 +37,7 @@ Built with the **Vapor** web framework (Swift), **HTMX**, and **Alpine.js**, Don
 
 1. **Clone & Build:**
    ```bash
-   git clone https://github.com/your-username/done.git
+   git clone https://github.com/aviatorcards/done.git
    cd done
    swift build
    ```
