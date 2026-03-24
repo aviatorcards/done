@@ -1,19 +1,19 @@
-<div class="min-w-[320px] max-w-[320px] flex flex-col h-full bg-slate-100/50 dark:bg-obsidian-900/50 rounded-[2.5rem] p-4 group/column column-item" data-column-id="#(column.id)">
-    <div class="px-4 py-2 mb-4 flex justify-between items-center relative group/col-header">
-        <div class="flex items-center gap-3">
-            <div class="cursor-grab active:cursor-grabbing text-slate-400 opacity-0 group-hover/column:opacity-100 transition-opacity">
+<div class="min-w-[85vw] md:min-w-[320px] max-w-[85vw] md:max-w-[320px] flex flex-col h-full bg-slate-100/50 dark:bg-obsidian-900/50 rounded-[1.5rem] md:rounded-[2.5rem] p-3 md:p-4 group/column column-item" data-column-id="#(column.id)">
+    <div class="px-3 md:px-4 py-2 mb-2 md:mb-4 flex justify-between items-center relative group/col-header">
+        <div class="flex items-center gap-2 md:gap-3">
+            <div class="column-drag-handle cursor-grab active:cursor-grabbing text-slate-400 opacity-60 md:opacity-0 md:group-hover/column:opacity-100 transition-opacity p-1">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
                 </svg>
             </div>
-            <h3 class="font-black text-slate-800 dark:text-white uppercase tracking-widest text-sm">#(column.title)</h3>
-            <span class="bg-slate-200 dark:bg-obsidian-800 text-slate-500 px-3 py-1 rounded-full text-xs font-bold">#(count(column.cards))</span>
+            <h3 class="font-black text-slate-800 dark:text-white uppercase tracking-widest text-xs md:text-sm truncate">#(column.title)</h3>
+            <span class="bg-slate-200 dark:bg-obsidian-800 text-slate-500 px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[10px] md:text-xs font-bold">#(count(column.cards))</span>
         </div>
         <button 
-            class="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all opacity-0 group-hover/column:opacity-100"
+            class="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all opacity-60 md:opacity-0 md:group-hover/column:opacity-100"
             hx-delete="/columns/#(column.id)"
             hx-confirm="Are you sure you want to delete this column and all its cards?"
-            hx-target="closest .min-w-\[320px\]"
+            hx-target="closest .column-item"
             hx-swap="outerHTML"
             hx-headers='js:{"Authorization": `Bearer ${localStorage.getItem("token")}`}'
         >
@@ -23,13 +23,13 @@
         </button>
     </div>
     
-    <div class="flex-1 overflow-y-auto space-y-4 px-2 card-list" data-column-id="#(column.id)">
+    <div class="flex-1 overflow-y-auto space-y-3 md:space-y-4 px-1 md:px-2 card-list" data-column-id="#(column.id)">
         #for(card in column.cards):
             #extend("partials/card")
         #endfor
     </div>
     
-    <button class="mt-4 w-full py-4 bg-white dark:bg-obsidian-800 hover:bg-brand-50 dark:hover:bg-brand-900/20 text-slate-600 dark:text-zinc-300 rounded-2xl transition-all shadow-sm hover:shadow group-hover/column:opacity-100 opacity-60 flex items-center justify-center gap-2 font-bold"
+    <button class="mt-4 w-full py-3 md:py-4 bg-white dark:bg-obsidian-800 hover:bg-brand-50 dark:hover:bg-brand-900/20 text-slate-600 dark:text-zinc-300 rounded-xl md:rounded-2xl transition-all shadow-sm hover:shadow md:group-hover/column:opacity-100 md:opacity-60 flex items-center justify-center gap-2 font-bold text-sm md:text-base"
             hx-get="/cards/new?columnID=#(column.id)"
             hx-target="body"
             hx-swap="beforeend">

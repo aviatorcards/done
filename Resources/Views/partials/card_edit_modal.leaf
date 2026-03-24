@@ -61,7 +61,7 @@
                 </div>
                 <div class="space-y-2">
                     <label class="text-sm font-semibold text-slate-700 dark:text-zinc-300 ml-1">Due Date</label>
-                    <input type="date" name="dueDate" value="#(card.dueDate)" 
+                    <input type="date" name="due_date" value="#(card.dueDate)" 
                            class="w-full px-5 py-4 rounded-2xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 focus:border-brand-500 outline-none transition-all">
                 </div>
             </div>
