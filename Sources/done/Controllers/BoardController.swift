@@ -60,7 +60,7 @@ struct BoardController: RouteCollection {
             )
         } else {
             // User doesn't exist, create invite code
-            let code = String((0..<8).map { _ in "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".randomElement()! })
+            let code = String.generateInviteCode()
             let inviteRecord = try InviteCode(
                 code: code,
                 email: inviteDTO.email,

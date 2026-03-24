@@ -16,6 +16,9 @@ final class User: Model, Content, Authenticatable, @unchecked Sendable {
     @Field(key: "password_hash")
     var passwordHash: String
     
+    @Field(key: "display_name")
+    var displayName: String?
+
     @Field(key: "avatar_url")
     var avatarUrl: String?
     
@@ -36,13 +39,14 @@ final class User: Model, Content, Authenticatable, @unchecked Sendable {
     
     init() { }
     
-    init(id: UUID? = nil, username: String, email: String, passwordHash: String, avatarUrl: String? = nil, isAdmin: Bool = false) {
+    init(id: UUID? = nil, username: String, email: String, passwordHash: String, avatarUrl: String? = nil, isAdmin: Bool = false, displayName: String? = nil) {
         self.id = id
         self.username = username
         self.email = email
         self.passwordHash = passwordHash
         self.avatarUrl = avatarUrl
         self.isAdmin = isAdmin
+        self.displayName = displayName
     }
 
     var initials: String {
@@ -57,7 +61,7 @@ final class User: Model, Content, Authenticatable, @unchecked Sendable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case id, username, email, avatarUrl, isAdmin, createdAt, updatedAt
+        case id, username, email, displayName, avatarUrl, isAdmin, createdAt, updatedAt
         case initials
     }
 
@@ -66,6 +70,7 @@ final class User: Model, Content, Authenticatable, @unchecked Sendable {
         try container.encodeIfPresent(id, forKey: .id)
         try container.encode(username, forKey: .username)
         try container.encode(email, forKey: .email)
+        try container.encodeIfPresent(displayName, forKey: .displayName)
         try container.encodeIfPresent(avatarUrl, forKey: .avatarUrl)
         try container.encode(isAdmin, forKey: .isAdmin)
         try container.encode(initials, forKey: .initials)
@@ -85,7 +90,7 @@ extension User {
     }
     
     func toPublic() -> UserDTO.Public {
-        .init(id: self.id, username: self.username, email: self.email, avatarUrl: self.avatarUrl)
+        .init(id: self.id, username: self.username, email: self.email, displayName: self.displayName, avatarUrl: self.avatarUrl)
     }
 }
 

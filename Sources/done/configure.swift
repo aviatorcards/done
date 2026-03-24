@@ -21,20 +21,21 @@ public func configure(_ app: Application) async throws {
 
     app.routes.defaultMaxBodySize = "10mb"
 
-    app.databases.use(.sqlite(.file("done.sqlite")), as: .sqlite)
-
-    if Environment.get("DATABASE_HOST") != nil {
+    if let host = Environment.get("DATABASE_HOST") {
         app.databases.use(
             DatabaseConfigurationFactory.postgres(
                 configuration: .init(
-                    hostname: Environment.get("DATABASE_HOST") ?? "localhost",
+                    hostname: host,
                     port: Environment.get("DATABASE_PORT").flatMap(Int.init(_:))
                         ?? SQLPostgresConfiguration.ianaPortNumber,
                     username: Environment.get("DATABASE_USERNAME") ?? "vapor_username",
                     password: Environment.get("DATABASE_PASSWORD") ?? "vapor_password",
                     database: Environment.get("DATABASE_NAME") ?? "vapor_database",
                     tls: .prefer(try .init(configuration: .clientDefault)))
-            ), as: .psql)
+            ), as: .psql, isDefault: true)
+    } else {
+        app.logger.info("No DATABASE_HOST found. Defaulting to SQLite.")
+        app.databases.use(.sqlite(.file("done.sqlite")), as: .sqlite, isDefault: true)
     }
 
     app.migrations.add(CreateUser())
@@ -49,8 +50,23 @@ public func configure(_ app: Application) async throws {
     app.migrations.add(CreateBoardMember())
     app.migrations.add(CreateInviteCode())
     app.migrations.add(AddIsAdminToUser())
+    app.migrations.add(AddDisplayNameToUser())
+    // app.migrations.add(SeedAdmin())
 
-    app.jwt.signers.use(.hs256(key: Environment.get("JWT_SECRET") ?? "secret"))
+        let jwtSecret: String
+        if app.environment == .production {
+            guard let secret = Environment.get("JWT_SECRET") else {
+                app.logger.critical("JWT_SECRET must be set in production.")
+                fatalError("Missing environment variable: JWT_SECRET")
+            }
+            jwtSecret = secret
+        } else {
+            jwtSecret = Environment.get("JWT_SECRET") ?? "development-secret-only"
+            if jwtSecret == "development-secret-only" {
+                app.logger.warning("Using insecure default JWT_SECRET for development. Change this as soon as possible.")
+            }
+        }
+    app.jwt.signers.use(.hs256(key: jwtSecret))
 
     app.views.use(.leaf)
 

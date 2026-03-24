@@ -240,6 +240,8 @@
                 <div class="flex-1 p-8 md:p-12 min-h-[400px]">
                     <!-- Profile Tab -->
                     <div x-show="settingsTab === 'profile'" class="space-y-8" x-data="{ 
+                        email: '#(user.email)',
+                        displayName: '#if(user.displayName): #(user.displayName) #endif',
                         currentPassword: '', 
                         newPassword: '', 
                         confirmPassword: '', 
@@ -257,16 +259,29 @@
                             }).then(r => r.ok ? window.location.reload() : alert('Upload failed'))
                               .finally(() => this.uploading = false);
                         },
-                        savePassword() {
-                            if (this.newPassword !== this.confirmPassword) return alert('Passwords do not match');
+                        saveProfile() {
+                            const data = { email: this.email, displayName: this.displayName };
+                            if (this.newPassword) {
+                                if (this.newPassword !== this.confirmPassword) return alert('Passwords do not match');
+                                data.currentPassword = this.currentPassword;
+                                data.newPassword = this.newPassword;
+                            }
                             fetch('/users/profile', {
                                 method: 'PATCH',
                                 headers: { 
                                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
                                     'Content-Type': 'application/json'
                                 },
-                                body: JSON.stringify({ currentPassword: this.currentPassword, newPassword: this.newPassword })
-                            }).then(r => r.ok ? (alert('Password updated!'), this.currentPassword = '', this.newPassword = '', this.confirmPassword = '') : alert('Failed to update password'));
+                                body: JSON.stringify(data)
+                            }).then(async r => {
+                                if (r.ok) {
+                                    alert('Profile updated!');
+                                    window.location.reload();
+                                } else {
+                                    const err = await r.json();
+                                    alert('Failed to update profile: ' + (err.reason || 'Unknown error'));
+                                }
+                            });
                         }
                     }">
                         <div class="flex items-center gap-6 p-6 rounded-[2rem] bg-slate-50 dark:bg-obsidian-950/50 border border-slate-100 dark:border-obsidian-800">
@@ -288,23 +303,39 @@
                                 </div>
                             </div>
                             <div>
-                                <h3 class="text-lg font-black text-slate-800 dark:text-white">#(user.username)</h3>
+                                <h3 class="text-lg font-black text-slate-800 dark:text-white">#if(user.displayName): #(user.displayName) #else: #(user.username) #endif</h3>
                                 <p class="text-sm text-slate-500">#(user.email)</p>
                             </div>
                         </div>
                         
                         <div class="space-y-6">
-                            <h4 class="text-sm font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-obsidian-800 pb-2">Change Password</h4>
+                            <h4 class="text-sm font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-obsidian-800 pb-2">Modify Profile</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="space-y-1">
+                                    <label class="text-xs font-bold text-slate-400 ml-1">Display Name</label>
+                                    <input type="text" placeholder="Your Name" x-model="displayName"
+                                           class="w-full px-5 py-3 rounded-2xl bg-white dark:bg-obsidian-800 border border-slate-200 dark:border-obsidian-700 outline-none focus:border-brand-500 transition-all">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-xs font-bold text-slate-400 ml-1">Email Address</label>
+                                    <input type="email" placeholder="email@example.com" x-model="email"
+                                           class="w-full px-5 py-3 rounded-2xl bg-white dark:bg-obsidian-800 border border-slate-200 dark:border-obsidian-700 outline-none focus:border-brand-500 transition-all">
+                                </div>
+                            </div>
+
+                            <h4 class="text-sm font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-obsidian-800 pb-2 pt-4">Change Password</h4>
                             <div class="space-y-4">
                                 <input type="password" placeholder="Current Password" x-model="currentPassword"
                                        class="w-full px-5 py-3 rounded-2xl bg-white dark:bg-obsidian-800 border border-slate-200 dark:border-obsidian-700 outline-none focus:border-brand-500 transition-all">
-                                <input type="password" placeholder="New Password" x-model="newPassword"
-                                       class="w-full px-5 py-3 rounded-2xl bg-white dark:bg-obsidian-800 border border-slate-200 dark:border-obsidian-700 outline-none focus:border-brand-500 transition-all">
-                                <input type="password" placeholder="Confirm New Password" x-model="confirmPassword"
-                                       class="w-full px-5 py-3 rounded-2xl bg-white dark:bg-obsidian-800 border border-slate-200 dark:border-obsidian-700 outline-none focus:border-brand-500 transition-all">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <input type="password" placeholder="New Password" x-model="newPassword"
+                                           class="w-full px-5 py-3 rounded-2xl bg-white dark:bg-obsidian-800 border border-slate-200 dark:border-obsidian-700 outline-none focus:border-brand-500 transition-all">
+                                    <input type="password" placeholder="Confirm New Password" x-model="confirmPassword"
+                                           class="w-full px-5 py-3 rounded-2xl bg-white dark:bg-obsidian-800 border border-slate-200 dark:border-obsidian-700 outline-none focus:border-brand-500 transition-all">
+                                </div>
                             </div>
-                            <button @click="savePassword()" class="bg-brand-600 hover:bg-brand-700 text-white px-8 py-3 rounded-2xl font-bold transition-all shadow-lg active:scale-95 disabled:opacity-50" :disabled="!newPassword || !currentPassword">
-                                Update Password
+                            <button @click="saveProfile()" class="bg-brand-600 hover:bg-brand-700 text-white px-8 py-3 rounded-2xl font-bold transition-all shadow-lg active:scale-95 disabled:opacity-50" :disabled="!email">
+                                Save Profile Changes
                             </button>
                         </div>
                     </div>

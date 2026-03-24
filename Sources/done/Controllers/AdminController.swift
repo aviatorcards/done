@@ -44,7 +44,7 @@ struct AdminController: RouteCollection {
         
         let count = dto.count ?? 1
         for _ in 0..<count {
-            let code = String((0..<8).map { _ in "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".randomElement()! })
+            let code = String.generateInviteCode()
             let invite = InviteCode(
                 code: code,
                 email: dto.email,
@@ -54,6 +54,9 @@ struct AdminController: RouteCollection {
             try await invite.save(on: req.db)
         }
         
+        if req.headers.contains(name: "HX-Request") {
+            return Response(status: .ok, headers: ["HX-Refresh": "true"])
+        }
         return req.redirect(to: "/admin/invites")
     }
 

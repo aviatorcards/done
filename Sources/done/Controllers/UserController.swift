@@ -24,7 +24,7 @@ struct UserController: RouteCollection {
         }
 
         let dto = try req.content.decode(SiteInviteDTO.self)
-        let code = String((0..<8).map { _ in "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".randomElement()! })
+        let code = String.generateInviteCode()
         
         let invite = InviteCode(
             code: code,
@@ -50,6 +50,22 @@ struct UserController: RouteCollection {
         
         guard let user = try await User.find(payload.userID, on: req.db) else {
             throw Abort(.notFound)
+        }
+
+        if let displayName = updateData.displayName {
+            user.displayName = displayName.isEmpty ? nil : displayName
+        }
+
+        if let email = updateData.email, !email.isEmpty {
+            // Check if email is already taken by someone else
+            let existing = try await User.query(on: req.db)
+                .filter(\.$email == email)
+                .first()
+            
+            if let existing = existing, try existing.requireID() != user.requireID() {
+                throw Abort(.conflict, reason: "Email is already in use")
+            }
+            user.email = email
         }
 
         if let newPassword = updateData.newPassword {
@@ -79,7 +95,18 @@ struct UserController: RouteCollection {
         }
         let data = try req.content.decode(UploadData.self)
 
-        let filename = "\(payload.userID.uuidString)-\(Int(Date().timeIntervalSince1970)).\(data.avatar.extension ?? "jpg")"
+        let maxSize = 1024 * 1024 * 5 // 5MB
+        guard data.avatar.data.readableBytes <= maxSize else {
+            throw Abort(.payloadTooLarge, reason: "Avatar image is too large (max 5MB)")
+        }
+        
+        let allowedExtensions = ["jpg", "jpeg", "png", "gif", "webp"]
+        let ext = (data.avatar.extension ?? "jpg").lowercased()
+        guard allowedExtensions.contains(ext) else {
+            throw Abort(.badRequest, reason: "Invalid file type. Supported: \(allowedExtensions.joined(separator: ", "))")
+        }
+
+        let filename = "\(payload.userID.uuidString)-\(Int(Date().timeIntervalSince1970)).\(ext)"
         let path = req.application.directory.publicDirectory + "uploads/avatars/" + filename
         
         // Ensure directory exists

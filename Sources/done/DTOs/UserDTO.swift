@@ -4,6 +4,7 @@ struct UserDTO: Content {
     var id: UUID?
     var username: String?
     var email: String?
+    var displayName: String?
     var password: String?
     var newPassword: String?
     var currentPassword: String?
@@ -13,11 +14,12 @@ struct UserDTO: Content {
         var id: UUID?
         var username: String
         var email: String
+        var displayName: String?
         var avatarUrl: String?
     }
     
     func toPublic() -> Public {
-        .init(id: id, username: username ?? "", email: email ?? "", avatarUrl: nil)
+        .init(id: id, username: username ?? "", email: email ?? "", displayName: displayName, avatarUrl: nil)
     }
 }
 

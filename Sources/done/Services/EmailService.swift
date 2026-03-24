@@ -22,7 +22,8 @@ struct EmailService: Sendable {
     func sendInvite(to email: String, code: String, boardTitle: String?, inviterName: String) async throws {
         let subject = boardTitle != nil ? "\(inviterName) invited you to board '\(boardTitle!)' on Done." : "\(inviterName) invited you to join Done."
         
-        let registrationLink = "http://localhost:8080/register?code=\(code)"
+        let baseURL = Environment.get("BASE_URL") ?? "http://localhost:8080"
+        let registrationLink = "\(baseURL)/register?code=\(code)"
         let body = """
         Hello!
         
