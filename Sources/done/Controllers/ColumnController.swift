@@ -32,15 +32,31 @@ struct ColumnController: RouteCollection {
     }
 
     func update(req: Request) async throws -> Column {
+        let userID = try req.auth.require(UserPayload.self).userID
         let dto = try req.content.decode(ColumnDTO.self)
         guard let column = try await Column.find(req.parameters.get("columnID"), on: req.db) else {
             throw Abort(.notFound)
         }
+        
+        let board = try await column.$board.get(on: req.db)
+        let isOwner = board.$owner.id == userID
+        let isMember = try await board.$members.query(on: req.db).filter(\User.$id == userID).first() != nil
+        
+        guard isOwner || isMember else {
+            throw Abort(.forbidden)
+        }
+        
         column.title = dto.title
         if let position = dto.position {
             column.position = position
         }
         try await column.save(on: req.db)
+        
+        // Broadcast update
+        if let boardID = board.id {
+            req.application.webSocketManager.broadcast(boardID: boardID, message: "column_updated")
+        }
+        
         return column
     }
 

@@ -1,12 +1,44 @@
 <div class="min-w-[85vw] md:min-w-[320px] max-w-[85vw] md:max-w-[320px] flex flex-col h-full bg-slate-100/50 dark:bg-obsidian-900/50 rounded-[1.5rem] md:rounded-[2.5rem] p-3 md:p-4 group/column column-item" data-column-id="#(column.id)">
     <div class="px-3 md:px-4 py-2 mb-2 md:mb-4 flex justify-between items-center relative group/col-header">
-        <div class="flex items-center gap-2 md:gap-3">
+        <div x-data="{ editingTitle: false, title: '#(column.title)' }" class="flex items-center gap-2 md:gap-3">
             <div class="column-drag-handle cursor-grab active:cursor-grabbing text-slate-400 opacity-60 md:opacity-0 md:group-hover/column:opacity-100 transition-opacity p-1">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
                 </svg>
             </div>
-            <h3 class="font-black text-slate-800 dark:text-white uppercase tracking-widest text-xs md:text-sm truncate">#(column.title)</h3>
+            
+            <h3 x-show="!editingTitle" @click="editingTitle = true" 
+                class="font-black text-slate-800 dark:text-white uppercase tracking-widest text-xs md:text-sm truncate cursor-pointer hover:text-brand-600 transition-colors">
+                <span x-text="title"></span>
+            </h3>
+            
+            <input x-show="editingTitle" type="text" x-model="title" 
+                   @click.away="editingTitle = false"
+                   @keyup.escape="editingTitle = false; title = '#(column.title)'"
+                   @keyup.enter="
+                       if (title.trim() && title !== '#(column.title)') {
+                           fetch(`/columns/#(column.id)`, {
+                               method: 'PATCH',
+                               headers: { 
+                                   'Content-Type': 'application/json',
+                                   'Authorization': `Bearer ${localStorage.getItem('token')}`
+                               },
+                               body: JSON.stringify({ 
+                                   title: title,
+                                   boardID: '#(board.id)'
+                               })
+                           }).then(res => {
+                               if (res.ok) { 
+                                    editingTitle = false;
+                               }
+                           })
+                       } else {
+                           editingTitle = false;
+                       }
+                   "
+                   class="font-black text-slate-800 dark:text-white uppercase tracking-widest text-xs md:text-sm bg-transparent border-b-2 border-brand-500 outline-none w-full"
+                   x-init="$watch('editingTitle', value => value && $nextTick(() => $el.focus()))">
+            
             <span class="bg-slate-200 dark:bg-obsidian-800 text-slate-500 px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[10px] md:text-xs font-bold">#(count(column.cards))</span>
         </div>
         <button 
