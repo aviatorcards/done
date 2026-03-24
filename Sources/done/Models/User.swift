@@ -19,20 +19,30 @@ final class User: Model, Content, Authenticatable, @unchecked Sendable {
     @Field(key: "avatar_url")
     var avatarUrl: String?
     
+    @Field(key: "is_admin")
+    var isAdmin: Bool
+    
     @Timestamp(key: "created_at", on: .create)
     var createdAt: Date?
     
     @Timestamp(key: "updated_at", on: .update)
     var updatedAt: Date?
     
+    @Siblings(through: BoardMember.self, from: \.$user, to: \.$board)
+    var sharedBoards: [Board]
+    
+    @Children(for: \.$owner)
+    var boards: [Board]
+    
     init() { }
     
-    init(id: UUID? = nil, username: String, email: String, passwordHash: String, avatarUrl: String? = nil) {
+    init(id: UUID? = nil, username: String, email: String, passwordHash: String, avatarUrl: String? = nil, isAdmin: Bool = false) {
         self.id = id
         self.username = username
         self.email = email
         self.passwordHash = passwordHash
         self.avatarUrl = avatarUrl
+        self.isAdmin = isAdmin
     }
 
     var initials: String {
@@ -44,6 +54,23 @@ final class User: Model, Content, Authenticatable, @unchecked Sendable {
         } else {
             return String(username.prefix(2)).uppercased()
         }
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id, username, email, avatarUrl, isAdmin, createdAt, updatedAt
+        case initials
+    }
+
+    func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(id, forKey: .id)
+        try container.encode(username, forKey: .username)
+        try container.encode(email, forKey: .email)
+        try container.encodeIfPresent(avatarUrl, forKey: .avatarUrl)
+        try container.encode(isAdmin, forKey: .isAdmin)
+        try container.encode(initials, forKey: .initials)
+        if let createdAt = createdAt { try container.encode(createdAt, forKey: .createdAt) }
+        if let updatedAt = updatedAt { try container.encode(updatedAt, forKey: .updatedAt) }
     }
 }
 

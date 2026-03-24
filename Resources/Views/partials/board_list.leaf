@@ -10,7 +10,22 @@
                         </div>
                         <div class="mt-8 flex items-center justify-between">
                             <div class="flex -space-x-2">
-                                <div class="w-8 h-8 rounded-full border-2 border-white dark:border-obsidian-800 bg-brand-200 flex items-center justify-center text-[10px] font-bold">#(board.owner.initials)</div>
+                                <div class="w-8 h-8 rounded-full border-2 border-white dark:border-obsidian-800 bg-brand-200 flex items-center justify-center text-[10px] font-bold z-[2] relative shadow-sm overflow-hidden" title="Owner: #(board.owner.username)">
+                                    #if(board.owner.avatarUrl):
+                                        <img src="#(board.owner.avatarUrl)" alt="Avatar" class="w-full h-full object-cover">
+                                    #else:
+                                        #(board.owner.initials)
+                                    #endif
+                                </div>
+                                #for(member in board.members):
+                                    <div class="w-8 h-8 rounded-full border-2 border-white dark:border-obsidian-800 bg-slate-200 flex items-center justify-center text-[10px] font-bold z-[1] relative shadow-sm overflow-hidden" title="#(member.username)">
+                                        #if(member.avatarUrl):
+                                            <img src="#(member.avatarUrl)" alt="Avatar" class="w-full h-full object-cover">
+                                        #else:
+                                            #(member.initials)
+                                        #endif
+                                    </div>
+                                #endfor
                             </div>
                             <span class="text-brand-600 font-medium flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                 Open Board

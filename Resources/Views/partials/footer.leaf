@@ -1,0 +1,39 @@
+<footer class="border-t border-slate-200 dark:border-obsidian-800 py-20 bg-slate-50 dark:bg-obsidian-900/50 mt-auto">
+    <div class="container mx-auto px-6">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-12 mb-16">
+            <div class="col-span-2 md:col-span-2 flex flex-col items-center md:items-start text-center md:text-left space-y-6">
+                <div class="flex items-center gap-3">
+                    <img :src="darkMode ? '/images/logo_dark.png' : '/images/logo.png'" alt="Logo" class="w-10 h-10 rounded-xl">
+                    <span class="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-brand-600 to-indigo-500">Done.</span>
+                </div>
+                <p class="text-slate-500 dark:text-slate-400 max-w-sm leading-relaxed font-medium">
+                    The productivity tool that stays out of your way. Built for makers, by makers.
+                </p>
+            </div>
+            <div class="space-y-6 text-center md:text-left">
+                <h5 class="text-sm font-black uppercase tracking-widest text-slate-800 dark:text-white">Product</h5>
+                <ul class="space-y-4 text-slate-500 dark:text-slate-400 font-bold">
+                    <li><a href="/#features" class="hover:text-brand-600 transition-colors">Features</a></li>
+                    <li><a href="/#roadmap" class="hover:text-brand-600 transition-colors">Roadmap</a></li>
+                    <li><a href="/login" class="hover:text-brand-600 transition-colors">Sign In</a></li>
+                    <li><a href="/docs" class="hover:text-brand-600 transition-colors">Documentation</a></li>
+                </ul>
+            </div>
+            <div class="space-y-6 text-center md:text-left">
+                <h5 class="text-sm font-black uppercase tracking-widest text-slate-800 dark:text-white">Company</h5>
+                <ul class="space-y-4 text-slate-500 dark:text-slate-400 font-bold">
+                    <li><a href="/about" class="hover:text-brand-600 transition-colors">About Us</a></li>
+                    <li><a href="/contact" class="hover:text-brand-600 transition-colors">Contact</a></li>
+                    <li><a href="/privacy" class="hover:text-brand-600 transition-colors">Privacy & GDPR</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="pt-12 border-t border-slate-200 dark:border-obsidian-800 flex flex-col md:flex-row justify-between items-center gap-6">
+            <p class="text-sm text-slate-400 font-bold">© 2026 Done. All rights reserved.</p>
+            <div class="flex gap-8 text-sm text-slate-400 font-bold">
+                  <a href="/privacy" class="hover:text-slate-600 dark:hover:text-white transition-colors">Privacy</a>
+                  <a href="/docs" class="hover:text-slate-600 dark:hover:text-white transition-colors">Terms</a>
+            </div>
+        </div>
+    </div>
+</footer>

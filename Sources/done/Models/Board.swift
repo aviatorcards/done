@@ -19,6 +19,9 @@ final class Board: Model, Content, @unchecked Sendable {
     @Timestamp(key: "updated_at", on: .update)
     var updatedAt: Date?
     
+    @Siblings(through: BoardMember.self, from: \.$board, to: \.$user)
+    var members: [User]
+    
     init() { }
     
     init(id: UUID? = nil, title: String, ownerID: User.IDValue) {

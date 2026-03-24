@@ -7,6 +7,7 @@ struct UserDTO: Content {
     var password: String?
     var newPassword: String?
     var currentPassword: String?
+    var inviteCode: String?
     
     struct Public: Content {
         var id: UUID?

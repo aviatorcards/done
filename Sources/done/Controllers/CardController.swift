@@ -42,6 +42,9 @@ struct CardController: RouteCollection {
             throw Abort(.notFound)
         }
         
+        // Track state change
+        let oldIsCompleted = card.isCompleted
+        
         if let title = dto.title { card.title = title }
         if let description = dto.description { card.description = description }
         if let position = dto.position { card.position = position }
@@ -54,7 +57,47 @@ struct CardController: RouteCollection {
         if let isCompleted = dto.isCompleted { card.isCompleted = isCompleted }
         if let assigneeID = dto.assigneeID { card.$assignee.id = assigneeID }
         
+        // AUTO-MOVE LOGIC: If marked as complete, move to "Done" column
+        if card.isCompleted && !oldIsCompleted {
+            let currentColumn = try await card.$column.get(on: req.db)
+            let boardID = currentColumn.$board.id
+            
+            // Search for "Done" or "Completed" column in this board
+            let columns = try await Column.query(on: req.db)
+                .filter(\.$board.$id == boardID)
+                .all()
+            
+            if let targetColumn = columns.first(where: { 
+                $0.title.lowercased() == "done" || 
+                $0.title.lowercased() == "completed" || 
+                $0.title.lowercased() == "finished" 
+            }) {
+                // Only move if we aren't already in that column
+                if targetColumn.id != currentColumn.id {
+                    card.$column.id = try targetColumn.requireID()
+                    
+                    // Put it at the top of the "Done" column
+                    let otherCards = try await Card.query(on: req.db)
+                        .filter(\.$column.$id == targetColumn.requireID())
+                        .all()
+                    
+                    for otherCard in otherCards {
+                        otherCard.position += 1
+                        try await otherCard.save(on: req.db)
+                    }
+                    card.position = 0
+                }
+            }
+        }
+        
         try await card.save(on: req.db)
+        
+        // Broadcast update
+        let board = try await card.$column.get(on: req.db).$board.get(on: req.db)
+        if let boardID = board.id {
+            req.application.webSocketManager.broadcast(boardID: boardID, message: "board_updated")
+        }
+        
         return card
     }
 

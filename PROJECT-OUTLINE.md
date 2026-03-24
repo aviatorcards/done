@@ -93,9 +93,10 @@ Core Kanban Functionality
 
 Create/edit/delete unlimited boards
 Dynamic columns (add, rename, reorder, delete)
-Rich cards: title, Markdown description, due dates, priority badges, color labels, assignee avatars, checklists, attachments (future)
+Rich cards: title, Markdown description (planned), due dates (planned), priority badges, color labels, assignee avatars, checklists (future), attachments (future)
 Drag & drop cards between columns + reordering within a column (real-time sync via WebSocket + optimistic UI)
-Archive cards/columns
+Column reordering (native Drag & Drop)
+Archive/Delete cards/columns
 
 User & Collaboration
 
@@ -106,12 +107,17 @@ Activity feed (who moved what)
 
 Advanced / Modern Touches
 
-Search + filter cards (title, labels, assignee)
+Search + filter cards (title, labels, assignee) (future)
 Dark/light mode toggle (Tailwind + Alpine)
-Keyboard shortcuts (e.g. “N” for new card)
+Unified User Settings (Profile, Appearance, Privacy)
+Data Export (JSON format)
+Account Deletion (Permanent data wipe)
+Keyboard shortcuts (e.g. “N” for new card) (future)
 Mobile-responsive (horizontal scroll on phone)
-Export board as PDF/JSON
-Notifications (in-app + optional email via Vapor queues)
+Static Content Pages (About, Contact, Docs, Privacy)
+Email-enabled Contact Form
+Notification system (future)
+PWA support (future)
 
 5. UI/UX Implementation – Visually Appealing & Modern
 

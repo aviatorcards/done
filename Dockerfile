@@ -61,6 +61,7 @@ RUN export DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true \
     && apt-get -q install -y \
       libjemalloc2 \
       ca-certificates \
+      libsqlite3-0 \
       tzdata \
 # If your app or its dependencies import FoundationNetworking, also install `libcurl4`.
       # libcurl4 \

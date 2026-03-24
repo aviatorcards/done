@@ -21,6 +21,8 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.65.0"),
         // 💾 SQLite driver for Fluent.
         .package(url: "https://github.com/vapor/fluent-sqlite-driver.git", from: "4.0.0"),
+        // 📧 SMTP for sending emails.
+        .package(url: "https://github.com/Mikroservices/Smtp.git", from: "2.1.0"),
     ],
     targets: [
         .executableTarget(
@@ -36,6 +38,7 @@ let package = Package(
                 .product(name: "NIOCore", package: "swift-nio"),
                 .product(name: "NIOPosix", package: "swift-nio"),
                 .product(name: "NIOConcurrencyHelpers", package: "swift-nio"),
+                .product(name: "Smtp", package: "Smtp"),
             ],
             swiftSettings: swiftSettings
         ),

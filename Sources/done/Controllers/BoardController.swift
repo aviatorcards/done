@@ -6,10 +6,113 @@ struct BoardController: RouteCollection {
         let boards = routes.grouped("boards").grouped(AuthMiddleware())
         boards.get(use: index)
         boards.post(use: create)
+        boards.post("import", use: importBoard)
         boards.group(":boardID") { board in
             board.get(use: show)
+            board.patch(use: update)
             board.delete(use: delete)
+            board.post("members", use: inviteMember)
         }
+    }
+
+    struct InviteDTO: Content {
+        var email: String
+    }
+
+    func inviteMember(req: Request) async throws -> Response {
+        let userID = try req.auth.require(UserPayload.self).userID
+        guard let inviter = try await User.find(userID, on: req.db) else {
+            throw Abort(.unauthorized)
+        }
+        
+        guard let board = try await Board.find(req.parameters.get("boardID"), on: req.db) else {
+             throw Abort(.notFound)
+        }
+        
+        // Ensure the current user is the owner
+        guard board.$owner.id == userID else {
+            throw Abort(.forbidden)
+        }
+        
+        let inviteDTO = try req.content.decode(InviteDTO.self)
+        let invitee = try await User.query(on: req.db).filter(\.$email == inviteDTO.email).first()
+        
+        if let invitee = invitee {
+            // User exists
+            if invitee.id == userID {
+                throw Abort(.badRequest, reason: "You are already the owner of this board.")
+            }
+            
+            let isMember = try await board.$members.query(on: req.db).filter(\User.$id == invitee.requireID()).first() != nil
+            if isMember {
+                throw Abort(.conflict, reason: "User is already a member.")
+            }
+            
+            let member = try BoardMember(boardID: board.requireID(), userID: invitee.requireID(), role: "editor")
+            try await member.save(on: req.db)
+            
+            // Send notification email
+            try await req.application.emailService.sendInvite(
+                to: inviteDTO.email,
+                code: "ALREADY_MEMBER",
+                boardTitle: board.title,
+                inviterName: inviter.username
+            )
+        } else {
+            // User doesn't exist, create invite code
+            let code = String((0..<8).map { _ in "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".randomElement()! })
+            let inviteRecord = try InviteCode(
+                code: code,
+                email: inviteDTO.email,
+                boardID: board.requireID(),
+                inviterID: userID
+            )
+            try await inviteRecord.save(on: req.db)
+            
+            // Send invite email
+            try await req.application.emailService.sendInvite(
+                to: inviteDTO.email,
+                code: code,
+                boardTitle: board.title,
+                inviterName: inviter.username
+            )
+        }
+        
+        return Response(status: .ok)
+    }
+
+    func update(req: Request) async throws -> Board {
+        let userID = try req.auth.require(UserPayload.self).userID
+        guard let board = try await Board.find(req.parameters.get("boardID"), on: req.db) else {
+            throw Abort(.notFound)
+        }
+        
+        // Ensure the user owns the board
+        guard board.$owner.id == userID else {
+            throw Abort(.forbidden)
+        }
+        
+        let dto = try req.content.decode(BoardDTO.self)
+        board.title = dto.title
+        try await board.save(on: req.db)
+        
+        // Broadcast update
+        if let boardID = board.id {
+            req.application.webSocketManager.broadcast(boardID: boardID, message: "board_updated")
+        }
+        
+        return board
+    }
+
+
+    func importBoard(req: Request) async throws -> Response {
+        let userID = try req.auth.require(UserPayload.self).userID
+        let importRequest = try req.content.decode(ImportBoardDTO.self)
+        
+        let service = KanbanImportService()
+        let board = try await service.importToDatabase(req: req, markdown: importRequest.markdown, ownerID: userID)
+        
+        return req.redirect(to: "/boards/\(try board.requireID())")
     }
 
     func index(req: Request) async throws -> View {
@@ -18,10 +121,17 @@ struct BoardController: RouteCollection {
             throw Abort(.unauthorized)
         }
         
-        let boards: [Board] = try await Board.query(on: req.db)
-            .filter(\Board.$owner.$id == userID)
+        let ownedBoards = try await user.$boards.query(on: req.db)
             .with(\.$owner)
+            .with(\.$members)
             .all()
+            
+        let sharedBoards = try await user.$sharedBoards.query(on: req.db)
+            .with(\.$owner)
+            .with(\.$members)
+            .all()
+            
+        let boards = (ownedBoards + sharedBoards).sorted(by: { ($0.updatedAt ?? $0.createdAt ?? Date()) > ($1.updatedAt ?? $1.createdAt ?? Date()) })
         
         let context: [String: AnySendable] = [
             "title": .init("My Boards"),
@@ -74,10 +184,15 @@ struct BoardController: RouteCollection {
             throw Abort(.unauthorized)
         }
         
-        // Ensure the user owns the board
-        guard board.$owner.id == userID else {
+        // Ensure the user owns the board OR is a member
+        let isOwner = board.$owner.id == userID
+        let isMember = try await board.$members.query(on: req.db).filter(\User.$id == userID).first() != nil
+        
+        guard isOwner || isMember else {
             throw Abort(.forbidden)
         }
+        
+        try await board.$members.load(on: req.db)
         
         let context: [String: AnySendable] = [
             "title": .init(board.title),

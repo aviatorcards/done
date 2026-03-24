@@ -1,0 +1,99 @@
+#extend("base"):
+    #export("body"):
+        <div class="flex flex-col min-h-[calc(100vh-80px)]">
+            <div class="flex-1 container mx-auto px-6 py-24">
+                <div class="max-w-6xl mx-auto flex flex-col md:flex-row gap-16">
+                    <!-- Sidebar Nav -->
+                    <aside class="w-full md:w-64 space-y-10 shrink-0">
+                        <div class="space-y-4">
+                            <h3 class="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6">Getting Started</h3>
+                            <nav class="space-y-2">
+                                <a href="#introduction" class="block px-4 py-3 rounded-xl font-bold bg-brand-50 dark:bg-brand-900/20 text-brand-600">Introduction</a>
+                                <a href="#quickstart" class="block px-4 py-3 rounded-xl font-bold text-slate-500 hover:text-brand-600 transition-colors">Quickstart</a>
+                                <a href="#architecture" class="block px-4 py-3 rounded-xl font-bold text-slate-500 hover:text-brand-600 transition-colors">Architecture</a>
+                            </nav>
+                        </div>
+                        <div class="space-y-4">
+                            <h3 class="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6">Features</h3>
+                            <nav class="space-y-2">
+                                <a href="#boards" class="block px-4 py-3 rounded-xl font-bold text-slate-500 hover:text-brand-600 transition-colors">Boards & Columns</a>
+                                <a href="#realtime" class="block px-4 py-3 rounded-xl font-bold text-slate-500 hover:text-brand-600 transition-colors">Real-time Sync</a>
+                                <a href="#privacy" class="block px-4 py-3 rounded-xl font-bold text-slate-500 hover:text-brand-600 transition-colors">Privacy & Data</a>
+                            </nav>
+                        </div>
+                    </aside>
+
+                    <!-- Doc Content -->
+                    <main class="flex-1 space-y-24 max-w-3xl">
+                        <section id="introduction" class="space-y-6">
+                            <h1 class="text-5xl font-black text-slate-800 dark:text-white tracking-tight">Introduction</h1>
+                            <p class="text-xl text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
+                                Done. is a modern, privacy-focused Kanban board designed for speed and simplicity. It leverages the power of Swift for a robust backend and HTMX for a dynamic, reactive frontend without the complexity of a heavy JavaScript framework.
+                            </p>
+                        </section>
+
+                        <section id="quickstart" class="space-y-8">
+                            <h2 class="text-3xl font-black text-slate-800 dark:text-white">Quickstart</h2>
+                            <div class="space-y-6">
+                                <div class="flex gap-6">
+                                    <div class="h-10 w-10 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 flex items-center justify-center font-black flex-shrink-0">1</div>
+                                    <div class="space-y-2">
+                                        <h4 class="text-xl font-black text-slate-800 dark:text-white">Create an Account</h4>
+                                        <p class="text-slate-500">Sign up in seconds. We only ask for the essentials.</p>
+                                    </div>
+                                </div>
+                                <div class="flex gap-6">
+                                    <div class="h-10 w-10 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 flex items-center justify-center font-black flex-shrink-0">2</div>
+                                    <div class="space-y-2">
+                                        <h4 class="text-xl font-black text-slate-800 dark:text-white">Start a Board</h4>
+                                        <p class="text-slate-500">Give it a title and a beautiful accent color.</p>
+                                    </div>
+                                </div>
+                                <div class="flex gap-6">
+                                    <div class="h-10 w-10 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 flex items-center justify-center font-black flex-shrink-0">3</div>
+                                    <div class="space-y-2">
+                                        <h4 class="text-xl font-black text-slate-800 dark:text-white">Add Cards</h4>
+                                        <p class="text-slate-500">Organize your tasks across columns and get to work.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section id="architecture" class="space-y-8">
+                            <h2 class="text-3xl font-black text-slate-800 dark:text-white">Architecture</h2>
+                            <div class="glass p-8 rounded-3xl border border-white/10 space-y-6 bg-slate-900 text-slate-100 font-mono text-sm shadow-2xl overflow-x-auto">
+                                <pre class="whitespace-pre-wrap">Sources/
+├── Controllers/   # Request handling logic
+├── Models/        # Database schemas (Fluent)
+├── Services/      # Third-party integrations
+└── routes.swift   # Endpoints & routing
+
+Resources/
+└── Views/         # Leaf templates (HTMX inside)</pre>
+                            </div>
+                            <p class="text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
+                                The application is built using a "Hypermedia Driven" approach. Instead of a thick JSON API, the server returns HTML fragments that HTMX swaps into the page, resulting in a significantly faster developer experience and a snappy user interface.
+                            </p>
+                        </section>
+
+                        <section id="privacy" class="space-y-8">
+                            <div class="p-10 rounded-[3rem] bg-indigo-600/5 dark:bg-brand-900/10 border border-brand-500/20 space-y-4">
+                                <h2 class="text-2xl font-black text-slate-800 dark:text-white flex items-center gap-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                    </svg>
+                                    Your Data, Your Control
+                                </h2>
+                                <p class="text-slate-500 dark:text-slate-400 font-medium">
+                                    We believe in full data ownership. You can export your entire board history at any time or delete your account permanently with a single click. We don't track you or sell your information.
+                                </p>
+                                <a href="/privacy" class="inline-block pt-2 text-brand-600 font-black hover:underline">Learn more about GDPR →</a>
+                            </div>
+                        </section>
+                    </main>
+                </div>
+            </div>
+            #extend("partials/footer")
+        </div>
+    #endexport
+#endextend
