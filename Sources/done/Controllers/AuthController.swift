@@ -7,6 +7,9 @@ struct AuthController: RouteCollection {
         auth.post("register", use: register)
         auth.post("login", use: login)
         auth.get("logout", use: logout)
+        
+        routes.get("reset-password", use: renderResetPassword)
+        routes.post("reset-password", use: handleResetPassword)
     }
 
     func logout(req: Request) async throws -> Response {
@@ -69,10 +72,12 @@ struct AuthController: RouteCollection {
         guard let user = try await User.query(on: req.db)
             .filter(\.$email == dto.email ?? "")
             .first() else {
+            req.logger.warning("Login failed: User not found for email \(dto.email ?? "nil")")
             throw Abort(.unauthorized)
         }
         
         guard try Bcrypt.verify(dto.password ?? "", created: user.passwordHash) else {
+            req.logger.warning("Login failed: Password mismatch for user \(user.email)")
             throw Abort(.unauthorized)
         }
         
@@ -89,5 +94,51 @@ struct AuthController: RouteCollection {
         response.cookies["token"] = .init(string: token, expires: Date().addingTimeInterval(24 * 60 * 60), isSecure: false, isHTTPOnly: true)
         
         return response
+    }
+
+    func renderResetPassword(req: Request) async throws -> View {
+        guard let token = req.query[String.self, at: "token"] else {
+            throw Abort(.badRequest, reason: "Missing reset token")
+        }
+        
+        guard let user = try await User.query(on: req.db)
+            .filter(\.$resetToken == token)
+            .first() else {
+            throw Abort(.notFound, reason: "Invalid reset token")
+        }
+        
+        if let expires = user.resetTokenExpiresAt, expires < Date() {
+            throw Abort(.badRequest, reason: "Reset token has expired")
+        }
+        
+        return try await req.view.render("reset_password", ["token": token, "email": user.email])
+    }
+
+    func handleResetPassword(req: Request) async throws -> Response {
+        let dto = try req.content.decode(UserDTO.self)
+        guard let token = dto.inviteCode ?? req.query[String.self, at: "token"] else { // We reuse inviteCode from DTO for simplicity
+            throw Abort(.badRequest, reason: "Missing token")
+        }
+        
+        guard let newPassword = dto.password, !newPassword.isEmpty else {
+            throw Abort(.badRequest, reason: "New password is required")
+        }
+        
+        guard let user = try await User.query(on: req.db)
+            .filter(\.$resetToken == token)
+            .first() else {
+            throw Abort(.notFound, reason: "Invalid or used token")
+        }
+        
+        if let expires = user.resetTokenExpiresAt, expires < Date() {
+            throw Abort(.badRequest, reason: "Token has expired")
+        }
+        
+        user.passwordHash = try Bcrypt.hash(newPassword)
+        user.resetToken = nil
+        user.resetTokenExpiresAt = nil
+        try await user.save(on: req.db)
+        
+        return req.redirect(to: "/login")
     }
 }

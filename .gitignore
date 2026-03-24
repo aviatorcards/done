@@ -14,3 +14,7 @@ default.profraw
 .claude/
 .gemini/
 .cursor/
+Public/uploads/
+storage/
+
+

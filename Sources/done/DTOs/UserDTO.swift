@@ -9,6 +9,7 @@ struct UserDTO: Content {
     var newPassword: String?
     var currentPassword: String?
     var inviteCode: String?
+    var inviteCredits: Int?
     
     struct Public: Content {
         var id: UUID?
@@ -16,10 +17,11 @@ struct UserDTO: Content {
         var email: String
         var displayName: String?
         var avatarUrl: String?
+        var inviteCredits: Int?
     }
     
     func toPublic() -> Public {
-        .init(id: id, username: username ?? "", email: email ?? "", displayName: displayName, avatarUrl: nil)
+        .init(id: id, username: username ?? "", email: email ?? "", displayName: displayName, avatarUrl: nil, inviteCredits: inviteCredits)
     }
 }
 

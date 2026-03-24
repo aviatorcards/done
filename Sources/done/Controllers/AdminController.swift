@@ -10,6 +10,10 @@ struct AdminController: RouteCollection {
         admin.get("invites", use: listInvites)
         admin.post("invites", use: generateManualInvite)
         admin.delete("invites", ":inviteID", use: deleteInvite)
+        
+        admin.get("users", use: listUsers)
+        admin.post("users", ":userID", "reset", use: triggerReset)
+        admin.delete("users", ":userID", use: deleteUser)
     }
 
     func listInvites(req: Request) async throws -> View {
@@ -35,14 +39,14 @@ struct AdminController: RouteCollection {
 
     struct ManualInviteDTO: Content {
         var email: String
-        var count: Int?
+        var count: String?
     }
 
     func generateManualInvite(req: Request) async throws -> Response {
         let dto = try req.content.decode(ManualInviteDTO.self)
         let userID = try req.auth.require(UserPayload.self).userID
         
-        let count = dto.count ?? 1
+        let count = Int(dto.count ?? "1") ?? 1
         for _ in 0..<count {
             let code = String.generateInviteCode()
             let invite = InviteCode(
@@ -65,6 +69,56 @@ struct AdminController: RouteCollection {
             throw Abort(.notFound)
         }
         try await invite.delete(on: req.db)
+        return Response(status: .ok)
+    }
+
+    func listUsers(req: Request) async throws -> View {
+        let users = try await User.query(on: req.db)
+            .sort(\.$createdAt, .descending)
+            .all()
+            
+        let payload = try req.auth.require(UserPayload.self)
+        guard let admin = try await User.find(payload.userID, on: req.db) else {
+            throw Abort(.unauthorized)
+        }
+        
+        let context: [String: AnySendable] = [
+            "title": .init("Admin | Users"),
+            "users": .init(users),
+            "user": .init(admin)
+        ]
+        
+        return try await req.view.render("admin_users", context)
+    }
+
+    func triggerReset(req: Request) async throws -> Response {
+        guard let userToReset = try await User.find(req.parameters.get("userID"), on: req.db) else {
+            throw Abort(.notFound)
+        }
+        
+        // Generate a simple secure token
+        let token = String.secureRandomString(count: 32)
+        userToReset.resetToken = token
+        userToReset.resetTokenExpiresAt = Date().addingTimeInterval(24 * 60 * 60) // 24 hours
+        try await userToReset.save(on: req.db)
+        
+        // Send email
+        try await req.application.emailService.sendPasswordReset(to: userToReset.email, token: token)
+        
+        return Response(status: .ok)
+    }
+
+    func deleteUser(req: Request) async throws -> Response {
+        guard let userToDelete = try await User.find(req.parameters.get("userID"), on: req.db) else {
+            throw Abort(.notFound)
+        }
+        
+        let payload = try req.auth.require(UserPayload.self)
+        if userToDelete.id == payload.userID {
+            throw Abort(.badRequest, reason: "You cannot delete yourself")
+        }
+        
+        try await userToDelete.delete(on: req.db)
         return Response(status: .ok)
     }
 }

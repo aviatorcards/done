@@ -126,7 +126,7 @@
                     <div class="relative" x-data="{ showUserMenu: false }">
                     <button @click="showUserMenu = !showUserMenu" @click.away="showUserMenu = false" 
                             class="flex items-center gap-3 p-1.5 pl-4 rounded-2xl hover:bg-slate-200/50 dark:hover:bg-obsidian-800/50 transition-all border border-transparent hover:border-slate-200 dark:hover:border-obsidian-700 group">
-                        <span class="text-sm font-bold text-slate-600 dark:text-slate-300 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">#if(user): #(user.username) #else: Account #endif</span>
+                        <span class="text-sm font-bold text-slate-600 dark:text-slate-300 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">#if(user): #if(user.displayName): #(user.displayName) #else: #(user.username) #endif #else: Account #endif</span>
                         <div class="h-9 w-9 rounded-xl overflow-hidden bg-gradient-to-br from-brand-600 to-indigo-600 flex items-center justify-center text-white text-xs font-black shadow-lg group-hover:scale-105 transition-transform">
                             #if(user.avatarUrl):
                                 <img src="#(user.avatarUrl)" alt="Avatar" class="w-full h-full object-cover">
@@ -233,6 +233,14 @@
                             </svg>
                             Data & Privacy
                         </button>
+                        <button @click="settingsTab = 'invites'" 
+                                :class="settingsTab === 'invites' ? 'bg-brand-600 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-200/50 dark:hover:bg-obsidian-800'"
+                                class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-bold transition-all text-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                            </svg>
+                            Invite Friends
+                        </button>
                     </nav>
                 </div>
 
@@ -252,7 +260,7 @@
                             this.uploading = true;
                             const formData = new FormData();
                             formData.append('avatar', file);
-                            fetch('/users/avatar', {
+                            fetch('/api/users/avatar', {
                                 method: 'POST',
                                 headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
                                 body: formData
@@ -266,7 +274,7 @@
                                 data.currentPassword = this.currentPassword;
                                 data.newPassword = this.newPassword;
                             }
-                            fetch('/users/profile', {
+                            fetch('/api/users/profile', {
                                 method: 'PATCH',
                                 headers: { 
                                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -377,7 +385,7 @@
                         exportData() {
                             this.exporting = true;
                             const token = localStorage.getItem('token');
-                            fetch('/users/export', {
+                            fetch('/api/users/export', {
                                 headers: { 'Authorization': `Bearer ${token}` }
                             })
                             .then(resp => {
@@ -401,7 +409,7 @@
                             if (confirm('Are you absolutely sure? This will PERMANENTLY delete your account and ALL your boards. This action cannot be undone.')) {
                                 this.deleting = true;
                                 const token = localStorage.getItem('token');
-                                fetch('/users/delete', {
+                                fetch('/api/users/delete', {
                                     method: 'POST',
                                     headers: { 'Authorization': `Bearer ${token}` }
                                 })
@@ -464,6 +472,68 @@
                                         class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-2xl font-bold transition-all shadow-lg hover:shadow-red-600/20 active:scale-95 disabled:opacity-50">
                                     Close Account Permanently
                                 </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Invites Tab -->
+                    <div x-show="settingsTab === 'invites'" class="space-y-8" x-data="{
+                        inviteEmail: '',
+                        sending: false,
+                        sendInvite() {
+                            if (!this.inviteEmail) return;
+                            this.sending = true;
+                            fetch('/api/users/invite', {
+                                method: 'POST',
+                                headers: { 
+                                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({ email: this.inviteEmail })
+                            }).then(async r => {
+                                if (r.ok) {
+                                    alert('Invite sent! Your friend will receive an email shortly.');
+                                    window.location.reload();
+                                } else {
+                                    const err = await r.json();
+                                    alert(err.reason || 'Failed to send invite');
+                                }
+                            }).finally(() => this.sending = false);
+                        }
+                    }">
+                        <div>
+                            <h3 class="text-2xl font-black text-slate-800 dark:text-white tracking-tight">Invite Friends</h3>
+                            <p class="text-slate-500 dark:text-slate-400 text-sm font-medium mt-1">Help grow the Done. community. You have <strong>#(user.inviteCredits)</strong> credits available.</p>
+                        </div>
+
+                        <div class="bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-900/30 p-6 rounded-3xl">
+                            <div class="flex items-center gap-4 text-indigo-700 dark:text-indigo-300">
+                                <div class="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shrink-0">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5a2 2 0 10-2 2h2z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="font-black">Regenerative Invites</div>
+                                    <div class="text-sm font-medium opacity-80">You get 1 new invite credit every week (up to 5 max). Use them wisely!</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div class="space-y-2">
+                                <label class="text-sm font-black text-slate-700 dark:text-zinc-300 ml-1">Friend's Email Address</label>
+                                <div class="flex gap-2">
+                                    <input type="email" x-model="inviteEmail" placeholder="friend@example.com" 
+                                           class="flex-1 px-6 py-4 rounded-2xl bg-slate-50 dark:bg-obsidian-950/50 border-2 border-slate-100 dark:border-obsidian-800 focus:border-brand-500 focus:ring-0 outline-none transition-all font-bold dark:text-white">
+                                    <button @click="sendInvite()" 
+                                            :disabled="sending || #(user.inviteCredits) === 0"
+                                            :class="sending || #(user.inviteCredits) === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105 active:scale-95 shadow-lg'"
+                                            class="bg-brand-600 text-white px-8 py-4 rounded-2xl font-black transition-all">
+                                        <span x-show="!sending">Send Invite</span>
+                                        <span x-show="sending">Sending...</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>

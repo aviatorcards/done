@@ -51,30 +51,35 @@ public func configure(_ app: Application) async throws {
     app.migrations.add(CreateInviteCode())
     app.migrations.add(AddIsAdminToUser())
     app.migrations.add(AddDisplayNameToUser())
+    app.migrations.add(AddPasswordResetToUser())
+    app.migrations.add(AddInviteCreditsToUser())
+    app.migrations.add(MigrateAvatarUrls())
     // app.migrations.add(SeedAdmin())
 
-        let jwtSecret: String
-        if app.environment == .production {
-            guard let secret = Environment.get("JWT_SECRET") else {
-                app.logger.critical("JWT_SECRET must be set in production.")
-                fatalError("Missing environment variable: JWT_SECRET")
-            }
-            jwtSecret = secret
-        } else {
-            jwtSecret = Environment.get("JWT_SECRET") ?? "development-secret-only"
-            if jwtSecret == "development-secret-only" {
-                app.logger.warning("Using insecure default JWT_SECRET for development. Change this as soon as possible.")
-            }
+    let jwtSecret: String
+    if app.environment == .production {
+        guard let secret = Environment.get("JWT_SECRET") else {
+            app.logger.critical("JWT_SECRET must be set in production.")
+            fatalError("Missing environment variable: JWT_SECRET")
         }
+        jwtSecret = secret
+    } else {
+        jwtSecret = Environment.get("JWT_SECRET") ?? "development-secret-only"
+        if jwtSecret == "development-secret-only" {
+            app.logger.warning(
+                "Using insecure default JWT_SECRET for development. Change this as soon as possible."
+            )
+        }
+    }
     app.jwt.signers.use(.hs256(key: jwtSecret))
 
     app.views.use(.leaf)
 
     try routes(app)
-    
+
     // Ensure migrations are run before attempting to set admins
     try await app.autoMigrate()
-    
+
     // Support setting admin from environment
     if let adminEmail = Environment.get("ADMIN_EMAIL") {
         _ = try await User.query(on: app.db)

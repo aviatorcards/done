@@ -16,8 +16,17 @@ final class User: Model, Content, Authenticatable, @unchecked Sendable {
     @Field(key: "password_hash")
     var passwordHash: String
     
-    @Field(key: "display_name")
-    var displayName: String?
+    @Field(key: "reset_token")
+    var resetToken: String?
+    
+    @Field(key: "reset_token_expires_at")
+    var resetTokenExpiresAt: Date?
+    
+    @Field(key: "invite_credits")
+    var inviteCredits: Int
+    
+    @Field(key: "last_invite_regen_at")
+    var lastInviteRegenAt: Date?
 
     @Field(key: "avatar_url")
     var avatarUrl: String?
@@ -39,7 +48,7 @@ final class User: Model, Content, Authenticatable, @unchecked Sendable {
     
     init() { }
     
-    init(id: UUID? = nil, username: String, email: String, passwordHash: String, avatarUrl: String? = nil, isAdmin: Bool = false, displayName: String? = nil) {
+    init(id: UUID? = nil, username: String, email: String, passwordHash: String, avatarUrl: String? = nil, isAdmin: Bool = false, displayName: String? = nil, resetToken: String? = nil, resetTokenExpiresAt: Date? = nil, inviteCredits: Int = 3, lastInviteRegenAt: Date? = nil) {
         self.id = id
         self.username = username
         self.email = email
@@ -47,22 +56,32 @@ final class User: Model, Content, Authenticatable, @unchecked Sendable {
         self.avatarUrl = avatarUrl
         self.isAdmin = isAdmin
         self.displayName = displayName
+        self.resetToken = resetToken
+        self.resetTokenExpiresAt = resetTokenExpiresAt
+        self.inviteCredits = inviteCredits
+        self.lastInviteRegenAt = lastInviteRegenAt ?? Date()
     }
 
+    @Field(key: "display_name")
+    var displayName: String?
+
     var initials: String {
-        let parts = username.split(separator: " ")
+        let name = (displayName ?? username).trimmingCharacters(in: .whitespacesAndNewlines)
+        let parts = name.split(separator: " ")
         if parts.count >= 2 {
             let first = parts[0].prefix(1).uppercased()
             let second = parts[1].prefix(1).uppercased()
             return first + second
         } else {
-            return String(username.prefix(2)).uppercased()
+            return String(name.prefix(2)).uppercased()
         }
     }
 
     enum CodingKeys: String, CodingKey {
         case id, username, email, displayName, avatarUrl, isAdmin, createdAt, updatedAt
         case initials
+        case resetToken, resetTokenExpiresAt
+        case inviteCredits, lastInviteRegenAt
     }
 
     func encode(to encoder: any Encoder) throws {
@@ -74,6 +93,10 @@ final class User: Model, Content, Authenticatable, @unchecked Sendable {
         try container.encodeIfPresent(avatarUrl, forKey: .avatarUrl)
         try container.encode(isAdmin, forKey: .isAdmin)
         try container.encode(initials, forKey: .initials)
+        try container.encodeIfPresent(resetToken, forKey: .resetToken)
+        try container.encodeIfPresent(resetTokenExpiresAt, forKey: .resetTokenExpiresAt)
+        try container.encode(inviteCredits, forKey: .inviteCredits)
+        try container.encodeIfPresent(lastInviteRegenAt, forKey: .lastInviteRegenAt)
         if let createdAt = createdAt { try container.encode(createdAt, forKey: .createdAt) }
         if let updatedAt = updatedAt { try container.encode(updatedAt, forKey: .updatedAt) }
     }
@@ -89,8 +112,26 @@ extension User {
         )
     }
     
+    func regenerateInviteCredits() {
+        let now = Date()
+        guard let lastRegen = lastInviteRegenAt else {
+            lastInviteRegenAt = now
+            return
+        }
+        
+        let secondsPerCredit: TimeInterval = 7 * 24 * 60 * 60 // 1 week
+        let elapsed = now.timeIntervalSince(lastRegen)
+        let creditsToAdd = Int(elapsed / secondsPerCredit)
+        
+        if creditsToAdd > 0 {
+            let maxCredits = 5
+            inviteCredits = min(maxCredits, inviteCredits + creditsToAdd)
+            lastInviteRegenAt = lastRegen.addingTimeInterval(Double(creditsToAdd) * secondsPerCredit)
+        }
+    }
+
     func toPublic() -> UserDTO.Public {
-        .init(id: self.id, username: self.username, email: self.email, displayName: self.displayName, avatarUrl: self.avatarUrl)
+        .init(id: self.id, username: self.username, email: self.email, displayName: self.displayName, avatarUrl: self.avatarUrl, inviteCredits: self.inviteCredits)
     }
 }
 

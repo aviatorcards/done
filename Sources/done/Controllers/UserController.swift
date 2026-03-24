@@ -3,8 +3,12 @@ import Fluent
 
 struct UserController: RouteCollection {
     func boot(routes: any RoutesBuilder) throws {
+        // Public API for avatars (filenames are unguessable)
+        routes.grouped("api", "users").get("avatar", ":filename", use: serveAvatar)
+
+        // Authenticated users API
         let users = routes.grouped(AuthMiddleware())
-            .grouped("users")
+            .grouped("api", "users")
         
         users.patch("profile", use: updateProfile)
         users.post("avatar", use: uploadAvatar)
@@ -23,6 +27,18 @@ struct UserController: RouteCollection {
             throw Abort(.notFound)
         }
 
+        inviter.regenerateInviteCredits()
+        
+        // Admins have infinite credits (or we just skip the check)
+        if !inviter.isAdmin {
+            guard inviter.inviteCredits > 0 else {
+                throw Abort(.badRequest, reason: "You do not have any invite credits left. New credits regenerate over time.")
+            }
+            inviter.inviteCredits -= 1
+        }
+        
+        try await inviter.save(on: req.db)
+
         let dto = try req.content.decode(SiteInviteDTO.self)
         let code = String.generateInviteCode()
         
@@ -37,8 +53,8 @@ struct UserController: RouteCollection {
         try await req.application.emailService.sendInvite(
             to: dto.email,
             code: code,
-            boardTitle: nil,
-            inviterName: inviter.username
+            boardTitle: String?(nil),
+            inviterName: inviter.displayName ?? inviter.username
         )
         
         return Response(status: .ok)
@@ -107,15 +123,56 @@ struct UserController: RouteCollection {
         }
 
         let filename = "\(payload.userID.uuidString)-\(Int(Date().timeIntervalSince1970)).\(ext)"
-        let path = req.application.directory.publicDirectory + "uploads/avatars/" + filename
+        let avatarsDir = req.application.directory.workingDirectory + "storage/uploads/avatars/"
+        let path = avatarsDir + filename
         
         // Ensure directory exists
-        try await req.fileio.writeFile(data.avatar.data, at: path)
+        if !FileManager.default.fileExists(atPath: avatarsDir) {
+            try FileManager.default.createDirectory(atPath: avatarsDir, withIntermediateDirectories: true)
+        }
         
-        user.avatarUrl = "/uploads/avatars/" + filename
+        // Encrypt the file bits before saving
+        let secret = Environment.get("JWT_SECRET") ?? "development-secret-only"
+        let encryptedData = try FileSecurity.encrypt(Data(data.avatar.data.readableBytesView), secret: secret)
+        
+        try await req.fileio.writeFile(ByteBuffer(data: encryptedData), at: path)
+        
+        user.avatarUrl = "/api/users/avatar/" + filename
         try await user.save(on: req.db)
         
         return user.toPublic()
+    }
+
+    func serveAvatar(req: Request) async throws -> Response {
+        let filename = try req.parameters.require("filename")
+        let avatarsDir = req.application.directory.workingDirectory + "storage/uploads/avatars/"
+        let path = avatarsDir + filename
+
+        guard FileManager.default.fileExists(atPath: path) else {
+            throw Abort(.notFound)
+        }
+
+        let data = try Data(contentsOf: URL(fileURLWithPath: path))
+        let secret = Environment.get("JWT_SECRET") ?? "development-secret-only"
+        
+        do {
+            let decryptedData = try FileSecurity.decrypt(data, secret: secret)
+            let response = Response(status: .ok)
+            response.body = .init(data: decryptedData)
+            
+            // Determine content-type based on extension
+            let ext = filename.split(separator: ".").last?.lowercased() ?? "jpg"
+            switch ext {
+            case "png": response.headers.contentType = .png
+            case "gif": response.headers.contentType = .gif
+            case "webp": response.headers.contentType = .webp
+            default: response.headers.contentType = .jpeg
+            }
+            
+            return response
+        } catch {
+            throw Abort(.internalServerError, reason: "Could not decrypt avatar.")
+        }
     }
 
     func exportData(req: Request) async throws -> Response {

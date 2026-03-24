@@ -1,0 +1,83 @@
+#extend("base"):
+    #export("body"):
+        <div class="max-w-6xl mx-auto py-12 px-4">
+            <div class="flex justify-between items-center mb-12">
+                <div>
+                    <h1 class="text-4xl font-black text-slate-800 dark:text-white tracking-tight">Admin | Users</h1>
+                    <p class="text-slate-500 dark:text-slate-400 mt-2 font-medium">Manage user accounts and issue password resets.</p>
+                </div>
+                <div class="flex gap-4">
+                    <a href="/admin/invites" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-2xl font-black transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5">Manage Invites</a>
+                    <a href="/boards" class="bg-white dark:bg-obsidian-800 text-slate-700 dark:text-white px-6 py-3 rounded-2xl font-black border border-slate-200 dark:border-obsidian-700 transition-all hover:bg-slate-50">Back to Boards</a>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-obsidian-900/40 rounded-[2.5rem] border border-slate-200 dark:border-obsidian-800 shadow-xl overflow-hidden">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="bg-slate-50 dark:bg-obsidian-800/50 border-b border-slate-100 dark:border-obsidian-800">
+                            <th class="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest">User</th>
+                            <th class="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest">Email</th>
+                            <th class="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest">Role</th>
+                            <th class="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest">Joined</th>
+                            <th class="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-obsidian-800">
+                        #for(u in users):
+                            <tr class="hover:bg-slate-50/50 dark:hover:bg-obsidian-800/20 transition-colors">
+                                <td class="px-8 py-5">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-xl bg-brand-600 flex items-center justify-center text-white font-black">
+                                            #if(u.avatarUrl):
+                                                <img src="#(u.avatarUrl)" class="w-full h-full object-cover rounded-xl">
+                                            #else:
+                                                #(u.initials)
+                                            #endif
+                                        </div>
+                                        <div>
+                                            <div class="font-black text-slate-800 dark:text-white">#if(u.displayName): #(u.displayName) #else: #(u.username) #endif</div>
+                                            <div class="text-xs text-slate-400 font-bold">@#(u.username)</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-8 py-5 text-slate-700 dark:text-zinc-300 font-bold">#(u.email)</td>
+                                <td class="px-8 py-5">
+                                    #if(u.isAdmin):
+                                        <span class="bg-amber-100 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider">Admin</span>
+                                    #else:
+                                        <span class="bg-slate-100 dark:bg-obsidian-800 text-slate-500 px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider">User</span>
+                                    #endif
+                                </td>
+                                <td class="px-8 py-5 text-slate-500 text-sm font-medium">#date(u.createdAt, "MMM d, yyyy")</td>
+                                <td class="px-8 py-5 text-right space-x-2">
+                                    <button 
+                                        class="bg-brand-50 hover:bg-brand-100 dark:bg-brand-500/10 dark:hover:bg-brand-500/20 text-brand-600 dark:text-brand-400 px-4 py-2 rounded-xl font-black text-xs transition-all active:scale-95"
+                                        hx-post="/admin/users/#(u.id)/reset"
+                                        hx-confirm="Send a password reset email to #(u.email)?"
+                                        hx-headers='js:{"Authorization": `Bearer ${localStorage.getItem("token")}`}'
+                                        hx-on::after-request="if(event.detail.successful) alert('Reset email sent successfully!'); else alert('Failed to send reset email')">
+                                        Reset Password
+                                    </button>
+                                    
+                                    #if(!u.isAdmin):
+                                    <button 
+                                        class="text-red-500 hover:text-red-700 transition-colors"
+                                        hx-delete="/admin/users/#(u.id)"
+                                        hx-confirm="Are you sure you want to delete user #(u.username)? All their data will be lost."
+                                        hx-headers='js:{"Authorization": `Bearer ${localStorage.getItem("token")}`}'
+                                        hx-on::after-request="if(event.detail.successful) window.location.reload()">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                        </svg>
+                                    </button>
+                                    #endif
+                                </td>
+                            </tr>
+                        #endfor
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    #endexport
+#endextend

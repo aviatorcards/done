@@ -133,6 +133,11 @@ struct BoardController: RouteCollection {
             
         let boards = (ownedBoards + sharedBoards).sorted(by: { ($0.updatedAt ?? $0.createdAt ?? Date()) > ($1.updatedAt ?? $1.createdAt ?? Date()) })
         
+        user.regenerateInviteCredits()
+        if user.hasChanges {
+            try await user.save(on: req.db)
+        }
+        
         let context: [String: AnySendable] = [
             "title": .init("My Boards"),
             "boards": .init(boards),

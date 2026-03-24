@@ -101,6 +101,44 @@ struct EmailService: Sendable {
             throw error
         }
     }
+
+    func sendPasswordReset(to email: String, token: String) async throws {
+        let baseURL = Environment.get("BASE_URL") ?? "http://localhost:8080"
+        let resetLink = "\(baseURL)/reset-password?token=\(token)"
+        let subject = "Password Reset Request - Done."
+        let body = """
+        Hello,
+        
+        A password reset was requested for your account on Done.
+        
+        You can reset your password by clicking the link below:
+        \(resetLink)
+        
+        This link will expire in 24 hours.
+        
+        If you did not request this, please ignore this email.
+        """
+        
+        app.logger.info("Sending password reset to \(email)")
+        
+        if Environment.get("SMTP_PASSWORD") == nil {
+            app.logger.info("MOCK RESET EMAIL (SMTP_PASSWORD missing): \(body)")
+            return
+        }
+        
+        let mail = Email(
+            from: EmailAddress(address: Environment.get("SMTP_FROM") ?? "done@fddl.dev", name: "Done."),
+            to: [EmailAddress(address: email)],
+            subject: subject,
+            body: body
+        )
+        
+        let result = try await app.smtp.send(mail).get()
+        if case .failure(let error) = result {
+            app.logger.error("Failed to send reset email: \(error.localizedDescription)")
+            throw error
+        }
+    }
 }
 
 extension Application {
