@@ -1,0 +1,66 @@
+#extend("base"):
+    #export("body"):
+        <div class="flex flex-col min-h-[calc(100vh-80px)]">
+            <div class="flex-1 container mx-auto px-6 py-24 max-w-4xl">
+                <div class="space-y-12">
+                    <div class="space-y-4">
+                        <h1 class="text-6xl font-black text-slate-800 dark:text-white tracking-tighter tracking-tight">Privacy Policy & <span class="text-brand-600">GDPR</span></h1>
+                        <p class="text-xl text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
+                            At Done., your privacy is not a feature; it is a fundamental right. We are fully committed to GDPR and protecting your data.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div class="glass p-10 rounded-[3rem] border border-white/20 space-y-6">
+                            <div class="h-14 w-14 rounded-2xl bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center text-brand-600 shadow-sm transition-transform hover:scale-110">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                            </div>
+                            <h4 class="text-2xl font-black text-slate-800 dark:text-white">Security First</h4>
+                            <p class="text-slate-500 font-medium leading-relaxed">
+                                We use industry-standard encryption for your data both at rest and in transit. Your passwords are never stored in plain text and are hashed using bcrypt.
+                            </p>
+                        </div>
+
+                        <div class="glass p-10 rounded-[3rem] border border-white/20 space-y-6">
+                            <div class="h-14 w-14 rounded-2xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 shadow-sm transition-transform hover:scale-110">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                </svg>
+                            </div>
+                            <h4 class="text-2xl font-black text-slate-800 dark:text-white">GDPR Compliance</h4>
+                            <p class="text-slate-500 font-medium leading-relaxed">
+                                Under GDPR, you have the right to access, rectify, and erase your personal data. We've built tools directly into your settings panel to make this as easy as a single click.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-8 pt-10">
+                        <h2 class="text-3xl font-black text-slate-800 dark:text-white leading-tight">Key Principles</h2>
+                        <div class="space-y-6">
+                            <div class="flex gap-6 items-start">
+                                 <div class="h-6 w-6 mt-1 flex-shrink-0 bg-brand-600 rounded-lg text-white font-black text-xs flex items-center justify-center">1</div>
+                                 <p class="text-lg text-slate-500 font-medium">We do not sell your data to third parties. Period.</p>
+                            </div>
+                            <div class="flex gap-6 items-start">
+                                 <div class="h-6 w-6 mt-1 flex-shrink-0 bg-brand-600 rounded-lg text-white font-black text-xs flex items-center justify-center">2</div>
+                                 <p class="text-lg text-slate-500 font-medium">We only collect the absolute minimum information required to facilitate our project management service.</p>
+                            </div>
+                            <div class="flex gap-6 items-start">
+                                 <div class="h-6 w-6 mt-1 flex-shrink-0 bg-brand-600 rounded-lg text-white font-black text-xs flex items-center justify-center">3</div>
+                                 <p class="text-lg text-slate-500 font-medium">You can export your data at any time in a machine-readable format (.json).</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 dark:bg-obsidian-900/30 p-10 rounded-[3.5rem] border border-slate-200 dark:border-white/5 space-y-6 mt-20">
+                        <h3 class="text-2xl font-black text-slate-800 dark:text-white">Questions?</h3>
+                        <p class="text-slate-500 font-medium">If you have any questions about how your data is handled, please reach out to us at <a href="/contact" class="text-brand-600 font-black hover:underline">done@fddl.dev</a>.</p>
+                    </div>
+                </div>
+            </div>
+            #extend("partials/footer")
+        </div>
+    #endexport
+#endextend

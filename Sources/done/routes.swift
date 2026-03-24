@@ -16,6 +16,36 @@ func routes(_ app: Application) throws {
         return try await req.view.render("landing", ["title": "Organize Your Life"]).encodeResponse(for: req)
     }
 
+    app.get("about") { req async throws -> View in
+        try await req.view.render("about", ["title": "About Us"])
+    }
+
+    app.get("contact") { req async throws -> View in
+        try await req.view.render("contact", ["title": "Contact"])
+    }
+
+    app.post("contact") { req async throws -> Response in
+        struct ContactData: Content {
+            let name: String
+            let email: String
+            let message: String
+        }
+        
+        let data = try req.content.decode(ContactData.self)
+        try await req.application.emailService.sendContactForm(name: data.name, email: data.email, message: data.message)
+        
+        // Return a response that HTMX will use to replace the form
+        return try await req.view.render("partials/contact-success").encodeResponse(for: req)
+    }
+
+    app.get("docs") { req async throws -> View in
+        try await req.view.render("docs", ["title": "Documentation"])
+    }
+
+    app.get("privacy") { req async throws -> View in
+        try await req.view.render("privacy", ["title": "Privacy & GDPR"])
+    }
+
     app.get("hello") { req async -> String in
         "Hello, world!"
     }
@@ -25,6 +55,7 @@ func routes(_ app: Application) throws {
     try app.register(collection: ColumnController())
     try app.register(collection: CardController())
     try app.register(collection: UserController())
+    try app.register(collection: AdminController())
 
     app.webSocket("board", ":boardID", "live") { req, ws in
         guard let boardID = req.parameters.get("boardID", as: UUID.self) else {

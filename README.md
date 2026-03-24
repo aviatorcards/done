@@ -10,10 +10,11 @@ Built with the **Vapor** web framework (Swift), **HTMX**, and **Alpine.js**, Don
 
 - ⚡ **Blazing Fast**: Near-instant page loads and interactions thanks to Vapor and HTMX.
 - 🔄 **Real-time Sync**: Boards update in real-time across users via WebSockets.
-- 🎨 **Stunning UI**: Modern glassmorphism design with a deep, easy-on-the-eyes dark mode.
+- 🤝 **Seamless Collaboration**: Invite team members to your boards via secure invite codes and email notifications.
+- 🎨 **Stunning UI**: Modern glassmorphism design with a deep, easy-on-the-eyes dark mode and custom avatars.
 - 📱 **Fully Responsive**: Works beautifully on desktop, tablet, and mobile.
-- 🔒 **Secure Auth**: JWT-based authentication with secure cookie management.
-- 🛡️ **Board Privacy**: Only board owners can access and modify their data.
+- 🔒 **Data Ownership**: Full control over your data with built-in export (JSON) and permanent account deletion.
+- 🛡️ **Secure Auth**: JWT-based authentication with secure cookie management and member-only access control.
 
 ## 🛠️ Tech Stack
 
@@ -64,8 +65,8 @@ Done. comes with a pre-configured `docker-compose.yml` for production-like envir
 
 ## 🔐 Registration Note
 
-**Public registration is currently closed.** 
-The login system remains active for existing users, but new account creation is restricted to maintain platform stability during this period.
+**Public registration is OPEN on this branch (dev) for testing and development purposes.** 
+Please feel free to create accounts and test the full onboarding flow.
 
 ---
 

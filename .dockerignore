@@ -1,2 +1,11 @@
 .build/
 .swiftpm/
+.git/
+.gitignore
+.vscode/
+.env
+docker-compose.yml
+Dockerfile
+README.md
+PROJECT-OUTLINE.md
+*.sqlite

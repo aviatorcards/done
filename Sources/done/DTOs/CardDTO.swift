@@ -10,4 +10,13 @@ struct CardDTO: Content {
     var columnID: UUID?
     var assigneeID: UUID?
     var isCompleted: Bool?
+    
+    enum CodingKeys: String, CodingKey {
+        case id, title, description, position
+        case dueDate = "due_date"
+        case priority
+        case columnID = "column_id"
+        case assigneeID = "assignee_id"
+        case isCompleted = "is_completed"
+    }
 }

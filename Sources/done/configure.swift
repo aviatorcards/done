@@ -46,10 +46,24 @@ public func configure(_ app: Application) async throws {
     app.migrations.add(CreateLabel())
     app.migrations.add(CreateCardLabel())
     app.migrations.add(CreateComment())
+    app.migrations.add(CreateBoardMember())
+    app.migrations.add(CreateInviteCode())
+    app.migrations.add(AddIsAdminToUser())
 
     app.jwt.signers.use(.hs256(key: Environment.get("JWT_SECRET") ?? "secret"))
 
     app.views.use(.leaf)
 
     try routes(app)
+    
+    // Ensure migrations are run before attempting to set admins
+    try await app.autoMigrate()
+    
+    // Support setting admin from environment
+    if let adminEmail = Environment.get("ADMIN_EMAIL") {
+        _ = try await User.query(on: app.db)
+            .filter(\.$email == adminEmail)
+            .set(\.$isAdmin, to: true)
+            .update()
+    }
 }

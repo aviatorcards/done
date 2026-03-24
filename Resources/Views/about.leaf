@@ -1,0 +1,89 @@
+#extend("base"):
+    #export("body"):
+        <div class="flex flex-col min-h-[calc(100vh-80px)]">
+            <div class="flex-1 container mx-auto px-6 py-24">
+                <div class="max-w-4xl mx-auto space-y-20">
+                    <!-- Hero -->
+                    <div class="text-center space-y-8 animate-in fade-in slide-in-from-bottom duration-1000">
+                        <h1 class="text-6xl lg:text-7xl font-black text-slate-800 dark:text-white tracking-tighter leading-tight">
+                            Built for <span class="bg-clip-text text-transparent bg-gradient-to-r from-brand-600 to-indigo-500">Focus.</span>
+                        </h1>
+                        <p class="text-xl text-slate-500 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed font-medium">
+                            Done. was born out of a frustration with bloated project management tools. We believe that your productivity tool should be as simple as a piece of paper, but as powerful as the web allows.
+                        </p>
+                    </div>
+
+                    <!-- Mission -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                        <div class="space-y-6">
+                            <h2 class="text-3xl font-black text-slate-800 dark:text-white leading-tight">Our Philosophy</h2>
+                            <p class="text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
+                                We don't want to capture your attention; we want to help you free it. Every pixel in Done. is designed to reduce cognitive load and keep you in the flow.
+                            </p>
+                            <div class="space-y-4">
+                                <div class="flex items-center gap-4">
+                                    <div class="h-10 w-10 rounded-xl bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center text-brand-600">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+                                    <span class="font-black text-slate-700 dark:text-slate-200">Minimalist by design</span>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <div class="h-10 w-10 rounded-xl bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center text-brand-600">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+                                    <span class="font-black text-slate-700 dark:text-slate-200">Lightning fast performance</span>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <div class="h-10 w-10 rounded-xl bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center text-brand-600">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+                                    <span class="font-black text-slate-700 dark:text-slate-200">Privacy first, always</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="relative">
+                            <div class="absolute -inset-4 bg-gradient-to-r from-brand-500 to-indigo-500 rounded-[3rem] blur-2xl opacity-20"></div>
+                            <div class="relative glass p-8 rounded-[3rem] border border-white/20">
+                                <div class="aspect-square bg-slate-100 dark:bg-obsidian-800 rounded-2xl overflow-hidden shadow-inner flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-32 w-32 text-slate-300 dark:text-obsidian-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Team/Tech -->
+                    <div class="glass p-12 md:p-16 rounded-[4rem] border border-white/10 space-y-10">
+                        <h2 class="text-3xl font-black text-slate-800 dark:text-white text-center">Modern Stack</h2>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+                            <div class="text-center space-y-3">
+                                <div class="text-4xl font-black text-brand-600">Swift</div>
+                                <p class="text-sm text-slate-500 font-bold uppercase tracking-widest">Backend</p>
+                            </div>
+                            <div class="text-center space-y-3">
+                                <div class="text-4xl font-black text-indigo-600">HTMX</div>
+                                <p class="text-sm text-slate-500 font-bold uppercase tracking-widest">Interactivity</p>
+                            </div>
+                            <div class="text-center space-y-3">
+                                <div class="text-4xl font-black text-blue-600">Tailwind</div>
+                                <p class="text-sm text-slate-500 font-bold uppercase tracking-widest">Styling</p>
+                            </div>
+                            <div class="text-center space-y-3">
+                                <div class="text-4xl font-black text-purple-600">SQLite</div>
+                                <p class="text-sm text-slate-500 font-bold uppercase tracking-widest">Database</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            #extend("partials/footer")
+        </div>
+    #endexport
+#endextend
