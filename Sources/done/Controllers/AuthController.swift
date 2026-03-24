@@ -14,7 +14,7 @@ struct AuthController: RouteCollection {
 
     func logout(req: Request) async throws -> Response {
         let response = req.redirect(to: "/")
-        response.cookies["token"] = .init(string: "", expires: Date(timeIntervalSince1970: 0), isSecure: false, isHTTPOnly: true)
+        response.cookies["token"] = .init(string: "", expires: Date(timeIntervalSince1970: 0), path: "/", isSecure: false, isHTTPOnly: true)
         return response
     }
 
@@ -61,7 +61,7 @@ struct AuthController: RouteCollection {
         
         let response = Response(status: .ok)
         try response.content.encode(["token": token])
-        response.cookies["token"] = .init(string: token, expires: Date().addingTimeInterval(24 * 60 * 60), isSecure: false, isHTTPOnly: true)
+        response.cookies["token"] = .init(string: token, expires: Date().addingTimeInterval(24 * 60 * 60), path: "/", isSecure: false, isHTTPOnly: true)
         
         return response
     }
@@ -91,7 +91,7 @@ struct AuthController: RouteCollection {
         
         let response = Response(status: .ok)
         try response.content.encode(["token": token])
-        response.cookies["token"] = .init(string: token, expires: Date().addingTimeInterval(24 * 60 * 60), isSecure: false, isHTTPOnly: true)
+        response.cookies["token"] = .init(string: token, expires: Date().addingTimeInterval(24 * 60 * 60), path: "/", isSecure: false, isHTTPOnly: true)
         
         return response
     }

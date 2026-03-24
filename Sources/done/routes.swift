@@ -10,10 +10,18 @@ func routes(_ app: Application) throws {
     }
     
     app.get { req async throws -> Response in
-        if let _ = req.cookies["token"] {
-            return req.redirect(to: "/boards")
+        if let token = req.cookies["token"]?.string {
+            do {
+                _ = try req.jwt.verify(token, as: UserPayload.self)
+                return req.redirect(to: "/boards")
+            } catch {
+                // Invalid token, clear it and show landing
+                let response = try await req.view.render("landing", ["title": "Organize Your Life"]).encodeResponse(for: req).get()
+                response.cookies["token"] = HTTPCookies.Value(string: "", expires: Date(timeIntervalSince1970: 0), path: "/", isSecure: false, isHTTPOnly: true)
+                return response
+            }
         }
-        return try await req.view.render("landing", ["title": "Organize Your Life"]).encodeResponse(for: req)
+        return try await req.view.render("landing", ["title": "Organize Your Life"]).encodeResponse(for: req).get()
     }
 
     app.get("about") { req async throws -> View in

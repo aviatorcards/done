@@ -7,7 +7,7 @@ struct AuthMiddleware: AsyncMiddleware {
         
         guard let token = token else {
             if request.headers.first(name: .accept)?.contains("text/html") ?? false && !request.headers.contains(name: "HX-Request") {
-                return request.redirect(to: "/login")
+                return request.redirect(to: "/")
             }
             throw Abort(.unauthorized)
         }
@@ -17,7 +17,9 @@ struct AuthMiddleware: AsyncMiddleware {
             request.auth.login(payload)
         } catch {
             if request.headers.first(name: .accept)?.contains("text/html") ?? false && !request.headers.contains(name: "HX-Request") {
-                return request.redirect(to: "/login")
+                let response = request.redirect(to: "/")
+                response.cookies["token"] = .init(string: "", expires: Date(timeIntervalSince1970: 0), path: "/", isSecure: false, isHTTPOnly: true)
+                return response
             }
             throw Abort(.unauthorized)
         }

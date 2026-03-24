@@ -307,7 +307,7 @@ struct UserController: RouteCollection {
 
         // Clear session/cookies
         let response = Response(status: .ok)
-        response.cookies["token"] = .init(stringLiteral: "")
+        response.cookies["token"] = .init(string: "", expires: Date(timeIntervalSince1970: 0), path: "/", isSecure: false, isHTTPOnly: true)
         return response
     }
 

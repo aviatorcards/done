@@ -1,7 +1,7 @@
 import Fluent
 
 struct MigrateAvatarUrls: AsyncMigration {
-    func prepare(on database: Database) async throws {
+    func prepare(on database: any Database) async throws {
         // Find all users with the old /uploads/avatars/ prefix
         let users = try await User.query(on: database)
             .all()
@@ -14,7 +14,7 @@ struct MigrateAvatarUrls: AsyncMigration {
         }
     }
 
-    func revert(on database: Database) async throws {
+    func revert(on database: any Database) async throws {
         let users = try await User.query(on: database)
             .all()
             
