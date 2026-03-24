@@ -23,6 +23,7 @@
                 <h5 class="text-sm font-black uppercase tracking-widest text-slate-800 dark:text-white">Company</h5>
                 <ul class="space-y-4 text-slate-500 dark:text-slate-400 font-bold">
                     <li><a href="/about" class="hover:text-brand-600 transition-colors">About Us</a></li>
+                    <li><a href="https://github.com/aviatorcards/done" class="hover:text-brand-600 transition-colors">GitHub</a></li>
                     <li><a href="/contact" class="hover:text-brand-600 transition-colors">Contact</a></li>
                     <li><a href="/privacy" class="hover:text-brand-600 transition-colors">Privacy & GDPR</a></li>
                 </ul>
