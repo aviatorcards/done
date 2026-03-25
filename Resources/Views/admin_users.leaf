@@ -36,7 +36,12 @@
                                             #endif
                                         </div>
                                         <div>
-                                            <div class="font-black text-slate-800 dark:text-white">#if(u.displayName): #(u.displayName) #else: #(u.username) #endif</div>
+                                            <div class="flex items-center gap-2">
+                                                <div class="font-black text-slate-800 dark:text-white">#if(u.displayName): #(u.displayName) #else: #(u.username) #endif</div>
+                                                #if(u.isEarlyAdopter):
+                                                    <span class="bg-amber-400/10 text-amber-600 dark:text-amber-400 text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-widest border border-amber-400/20">Early Adopter</span>
+                                                #endif
+                                            </div>
                                             <div class="text-xs text-slate-400 font-bold">@#(u.username)</div>
                                         </div>
                                     </div>

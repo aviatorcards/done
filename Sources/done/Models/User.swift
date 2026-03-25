@@ -77,9 +77,20 @@ final class User: Model, Content, Authenticatable, @unchecked Sendable {
         }
     }
 
+    var isEarlyAdopter: Bool {
+        guard let createdAt = createdAt else { return false }
+        // Cutoff: September 24, 2026
+        var components = DateComponents()
+        components.year = 2026
+        components.month = 9
+        components.day = 24
+        guard let cutoff = Calendar.current.date(from: components) else { return false }
+        return createdAt < cutoff
+    }
+
     enum CodingKeys: String, CodingKey {
         case id, username, email, displayName, avatarUrl, isAdmin, createdAt, updatedAt
-        case initials
+        case initials, isEarlyAdopter
         case resetToken, resetTokenExpiresAt
         case inviteCredits, lastInviteRegenAt
     }
@@ -93,6 +104,7 @@ final class User: Model, Content, Authenticatable, @unchecked Sendable {
         try container.encodeIfPresent(avatarUrl, forKey: .avatarUrl)
         try container.encode(isAdmin, forKey: .isAdmin)
         try container.encode(initials, forKey: .initials)
+        try container.encode(isEarlyAdopter, forKey: .isEarlyAdopter)
         try container.encodeIfPresent(resetToken, forKey: .resetToken)
         try container.encodeIfPresent(resetTokenExpiresAt, forKey: .resetTokenExpiresAt)
         try container.encode(inviteCredits, forKey: .inviteCredits)
@@ -131,7 +143,7 @@ extension User {
     }
 
     func toPublic() -> UserDTO.Public {
-        .init(id: self.id, username: self.username, email: self.email, displayName: self.displayName, avatarUrl: self.avatarUrl, inviteCredits: self.inviteCredits)
+        .init(id: self.id, username: self.username, email: self.email, displayName: self.displayName, avatarUrl: self.avatarUrl, inviteCredits: self.inviteCredits, isEarlyAdopter: self.isEarlyAdopter)
     }
 }
 
