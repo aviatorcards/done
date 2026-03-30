@@ -55,6 +55,7 @@ public func configure(_ app: Application) async throws {
     app.migrations.add(AddInviteCreditsToUser())
     app.migrations.add(MigrateAvatarUrls())
     // app.migrations.add(SeedAdmin())
+    // app.migrations.add(UpdateAdminPassword())
 
     let jwtSecret: String
     if app.environment == .production {

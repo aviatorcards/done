@@ -60,7 +60,7 @@ struct AuthController: RouteCollection {
         let token = try req.jwt.sign(payload)
         
         let response = Response(status: .ok)
-        try response.content.encode(["token": token])
+        try response.content.encode(["token": token], as: .json)
         response.cookies["token"] = .init(string: token, expires: Date().addingTimeInterval(24 * 60 * 60), path: "/", isSecure: false, isHTTPOnly: true)
         
         return response
@@ -68,11 +68,17 @@ struct AuthController: RouteCollection {
 
     func login(req: Request) async throws -> Response {
         let dto = try req.content.decode(UserDTO.self)
+        let identifier = (dto.email ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         
-        guard let user = try await User.query(on: req.db)
-            .filter(\.$email == dto.email ?? "")
-            .first() else {
-            req.logger.warning("Login failed: User not found for email \(dto.email ?? "nil")")
+        let user = try await User.query(on: req.db)
+            .group(.or) { qb in
+                qb.filter(\.$email == identifier)
+                qb.filter(\.$username == identifier)
+            }
+            .first()
+            
+        guard let user = user else {
+            req.logger.warning("Login failed: User not found for identifier \(identifier)")
             throw Abort(.unauthorized)
         }
         
@@ -90,7 +96,7 @@ struct AuthController: RouteCollection {
         let token = try req.jwt.sign(payload)
         
         let response = Response(status: .ok)
-        try response.content.encode(["token": token])
+        try response.content.encode(["token": token], as: .json)
         response.cookies["token"] = .init(string: token, expires: Date().addingTimeInterval(24 * 60 * 60), path: "/", isSecure: false, isHTTPOnly: true)
         
         return response
