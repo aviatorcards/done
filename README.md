@@ -63,10 +63,7 @@ Done. comes with a pre-configured `docker-compose.yml` for production-like envir
    docker compose run migrate
    ```
 
-## 🔐 Registration Note
-
-**Public registration is OPEN on this branch (dev) for testing and development purposes.** 
-Please feel free to create accounts and test the full onboarding flow.
+## 🔐 Registration invite only currently
 
 ---
 
