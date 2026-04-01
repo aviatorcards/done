@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="en" x-data="{ 
     darkMode: localStorage.getItem('darkMode') === 'true',
-    isLoggedIn: !!localStorage.getItem('token'),
+    isLoggedIn: !!localStorage.getItem('token') && #if(user): true #else: false #endif,
+    serverSideAuthenticated: #if(user): true #else: false #endif,
     showSettingsModal: false,
     settingsTab: 'profile',
     cookieAccepted: localStorage.getItem('cookieAccepted') === 'true',
@@ -80,6 +81,17 @@
                     window.location.href = '/';
                 }
             });
+
+            // Zombie login detection: If we have a token in localStorage but the server doesn't know us,
+            // we should clear the token to avoid showing a broken "logged in" UI.
+            const hasLocalToken = !!localStorage.getItem('token');
+            const serverAuthenticated = #if(user): true #else: false #endif;
+            
+            if (hasLocalToken && !serverAuthenticated) {
+                console.warn('Zombie login detected: Clearing invalid token.');
+                localStorage.removeItem('token');
+                window.location.reload();
+            }
         });
     </script>
 </head>
@@ -136,10 +148,12 @@
                             #endif
                         </div>
                         <div class="h-9 w-9 rounded-xl overflow-hidden bg-gradient-to-br from-brand-600 to-indigo-600 flex items-center justify-center text-white text-xs font-black shadow-lg group-hover:scale-105 transition-transform">
-                            #if(user.avatarUrl):
-                                <img src="#(user.avatarUrl)" alt="Avatar" class="w-full h-full object-cover">
-                            #else:
-                                #(user.initials)
+                            #if(user):
+                                #if(user.avatarUrl):
+                                    <img src="#(user.avatarUrl)" alt="Avatar" class="w-full h-full object-cover">
+                                #else:
+                                    #(user.initials)
+                                #endif
                             #endif
                         </div>
                     </button>
@@ -157,13 +171,16 @@
                         <div class="px-5 py-3 mb-2 border-b border-slate-100 dark:border-obsidian-800">
                             <div class="flex items-center justify-between mb-1">
                                 <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Signed in as</p>
-                                #if(user.isEarlyAdopter):
-                                    <span class="bg-amber-400/10 text-amber-600 dark:text-amber-400 text-[9px] px-2 py-0.5 rounded-md font-black uppercase tracking-widest border border-amber-400/20">Early Adopter</span>
+                                #if(user):
+                                    #if(user.isEarlyAdopter):
+                                        <span class="bg-amber-400/10 text-amber-600 dark:text-amber-400 text-[9px] px-2 py-0.5 rounded-md font-black uppercase tracking-widest border border-amber-400/20">Early Adopter</span>
+                                    #endif
                                 #endif
                             </div>
                             <p class="text-sm font-black text-slate-800 dark:text-white truncate">#if(user): #(user.email) #else: User #endif</p>
                         </div>
                         
+                        #if(user):
                         #if(user.isAdmin):
                         <a href="/admin/invites" class="w-full flex items-center gap-3 px-5 py-4 text-sm font-black text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all text-left">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -171,6 +188,7 @@
                             </svg>
                             Admin Panel
                         </a>
+                        #endif
                         #endif
 
                         <button @click="showSettingsModal = true; showUserMenu = false" class="w-full flex items-center gap-3 px-5 py-4 text-sm font-black text-slate-700 dark:text-zinc-300 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-slate-50 dark:hover:bg-obsidian-800/50 transition-all text-left">
@@ -218,6 +236,7 @@
                  x-transition:enter-start="opacity-0 scale-95 translate-y-4"
                  x-transition:enter-end="opacity-100 scale-100 translate-y-0">
                 
+                #if(user):
                 <!-- Sidebar -->
                 <div class="w-full md:w-64 bg-slate-50 dark:bg-obsidian-950/50 p-4 md:p-8 border-b md:border-b-0 md:border-r border-slate-100 dark:border-obsidian-800 sticky top-0 z-10 md:relative">
                     <h2 class="text-lg md:text-xl font-black text-slate-800 dark:text-white mb-4 md:mb-6">Settings</h2>
@@ -256,13 +275,30 @@
                         </button>
                     </nav>
                 </div>
+                #else:
+                <div class="flex flex-col items-center justify-center w-full p-20 text-center space-y-6">
+                    <div class="w-20 h-20 bg-slate-100 dark:bg-obsidian-800 rounded-full flex items-center justify-center text-slate-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-black text-slate-800 dark:text-white">Sign In Required</h2>
+                        <p class="text-slate-600 dark:text-slate-400 font-medium max-w-sm mx-auto mt-2">Your session has expired or you are not signed in. Please log in to your account to view settings.</p>
+                    </div>
+                    <a href="/login" class="inline-block px-10 py-4 bg-brand-600 text-white rounded-[2rem] font-black text-lg hover:bg-brand-700 transition-all shadow-xl active:scale-95">
+                        Sign In Now
+                    </a>
+                </div>
+                #endif
 
+                #if(user):
                 <!-- Content -->
                 <div class="flex-1 p-5 md:p-12 min-h-[300px] md:min-h-[400px]">
                     <!-- Profile Tab -->
                     <div x-show="settingsTab === 'profile'" class="space-y-8" x-data="{ 
-                        email: '#(user.email)',
-                        displayName: '#if(user.displayName): #(user.displayName) #endif',
+                        email: '#if(user): #(user.email) #endif',
+                        displayName: '#if(user): #if(user.displayName): #(user.displayName) #endif #endif',
                         currentPassword: '', 
                         newPassword: '', 
                         confirmPassword: '', 
@@ -310,7 +346,7 @@
                                 #if(user.avatarUrl):
                                     <img src="#(user.avatarUrl)" alt="Avatar" class="w-full h-full object-cover">
                                 #else:
-                                    <span class="text-white text-2xl font-black">#(user.initials)</span>
+                                    #if(user): #(user.initials) #endif
                                 #endif
                                 <label class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                                     <input type="file" class="hidden" accept="image/*" @change="uploadAvatar($event.target)">
@@ -325,12 +361,12 @@
                             </div>
                             <div>
                                 <div class="flex items-center gap-2">
-                                    <h3 class="text-lg font-black text-slate-800 dark:text-white">#if(user.displayName): #(user.displayName) #else: #(user.username) #endif</h3>
+                                    <h3 class="text-lg font-black text-slate-800 dark:text-white">#if(user.displayName): #(user.displayName) #else: #if(user): #(user.username) #endif #endif</h3>
                                     #if(user.isEarlyAdopter):
                                         <span class="bg-amber-400/10 text-amber-600 dark:text-amber-400 text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-widest border border-amber-400/20">Early Adopter</span>
                                     #endif
                                 </div>
-                                <p class="text-sm text-slate-500">#(user.email)</p>
+                                <p class="text-sm text-slate-500">#if(user): #(user.email) #endif</p>
                             </div>
                         </div>
                         
@@ -521,7 +557,7 @@
                     }">
                         <div>
                             <h3 class="text-2xl font-black text-slate-800 dark:text-white tracking-tight">Invite Friends</h3>
-                            <p class="text-slate-500 dark:text-slate-400 text-sm font-medium mt-1">Help grow the Done. community. You have <strong>#(user.inviteCredits)</strong> credits available.</p>
+                            <p class="text-slate-500 dark:text-slate-400 text-sm font-medium mt-1">Help grow the Done. community. You have <strong>#if(user): #(user.inviteCredits) #endif</strong> credits available.</p>
                         </div>
 
                         <div class="bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-900/30 p-6 rounded-3xl">
@@ -545,8 +581,8 @@
                                     <input type="email" x-model="inviteEmail" placeholder="friend@example.com" 
                                            class="flex-1 px-6 py-4 rounded-2xl bg-slate-50 dark:bg-obsidian-950/50 border-2 border-slate-100 dark:border-obsidian-800 focus:border-brand-500 focus:ring-0 outline-none transition-all font-bold dark:text-white">
                                     <button @click="sendInvite()" 
-                                            :disabled="sending || #(user.inviteCredits) === 0"
-                                            :class="sending || #(user.inviteCredits) === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105 active:scale-95 shadow-lg'"
+                                            :disabled="sending || #if(user): #(user.inviteCredits) #else: 0 #endif === 0"
+                                            :class="sending || #if(user): #(user.inviteCredits) #else: 0 #endif === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105 active:scale-95 shadow-lg'"
                                             class="flex-1 bg-brand-600 text-white px-4 md:px-8 py-4 rounded-2xl font-black transition-all text-sm md:text-base">
                                         <span x-show="!sending">Send Invite</span>
                                         <span x-show="sending">Sending...</span>
@@ -556,6 +592,7 @@
                         </div>
                     </div>
                 </div>
+                #endif
 
                 <!-- Close Button -->
                 <button @click="showSettingsModal = false" class="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
