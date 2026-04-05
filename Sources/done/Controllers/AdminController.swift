@@ -59,8 +59,11 @@ struct AdminController: RouteCollection {
         }
         
         if req.headers.contains(name: "HX-Request") {
-            return Response(status: .ok, headers: ["HX-Refresh": "true"])
+            let response = Response(status: .noContent)
+            response.headers.replaceOrAdd(name: "HX-Refresh", value: "true")
+            return response
         }
+        
         return req.redirect(to: "/admin/invites")
     }
 
