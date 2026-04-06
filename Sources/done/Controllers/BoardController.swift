@@ -12,6 +12,7 @@ struct BoardController: RouteCollection {
             board.patch(use: update)
             board.delete(use: delete)
             board.post("members", use: inviteMember)
+            board.get("export", use: exportBoard)
         }
     }
 
@@ -110,9 +111,36 @@ struct BoardController: RouteCollection {
         let importRequest = try req.content.decode(ImportBoardDTO.self)
         
         let service = KanbanImportService()
-        let board = try await service.importToDatabase(req: req, markdown: importRequest.markdown, ownerID: userID)
+        let board = try await service.importToDatabase(req: req, dto: importRequest, ownerID: userID)
         
         return req.redirect(to: "/boards/\(try board.requireID())")
+    }
+
+    func exportBoard(req: Request) async throws -> Response {
+        let userID = try req.auth.require(UserPayload.self).userID
+        guard let boardIDString = req.parameters.get("boardID"), let boardID = UUID(uuidString: boardIDString) else {
+            throw Abort(.badRequest)
+        }
+        
+        guard let board = try await Board.find(boardID, on: req.db) else {
+            throw Abort(.notFound)
+        }
+        
+        // Ensure the user owns the board OR is a member
+        let isOwner = board.$owner.id == userID
+        let isMember = try await board.$members.query(on: req.db).filter(\User.$id == userID).first() != nil
+        
+        guard isOwner || isMember else {
+            throw Abort(.forbidden)
+        }
+        
+        let formatStr = req.query[String.self, at: "format"] ?? "json"
+        guard let format = ImportFormat(rawValue: formatStr.lowercased()) else {
+            throw Abort(.badRequest, reason: "Unsupported export format.")
+        }
+        
+        let exportService = KanbanExportService()
+        return try await exportService.exportBoard(board, on: req.db, format: format)
     }
 
     func index(req: Request) async throws -> View {

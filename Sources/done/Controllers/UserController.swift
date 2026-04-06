@@ -191,8 +191,16 @@ struct UserController: RouteCollection {
             throw Abort(.notFound)
         }
 
-        let ownedBoardDTOs = try await gatherBoardData(for: user.boards, on: req.db)
-        let sharedBoardDTOs = try await gatherBoardData(for: user.sharedBoards, on: req.db)
+        let exportService = KanbanExportService()
+        var ownedBoardDTOs: [BoardExportDTO] = []
+        for board in user.boards {
+            ownedBoardDTOs.append(try await exportService.gatherBoardData(for: board, on: req.db))
+        }
+        
+        var sharedBoardDTOs: [BoardExportDTO] = []
+        for board in user.sharedBoards {
+            sharedBoardDTOs.append(try await exportService.gatherBoardData(for: board, on: req.db))
+        }
         
         let invites = try await InviteCode.query(on: req.db)
             .filter(\.$inviter.$id == payload.userID)
@@ -226,55 +234,6 @@ struct UserController: RouteCollection {
         return response
     }
 
-    private func gatherBoardData(for boards: [Board], on db: any Database) async throws -> [BoardExportDTO] {
-        var boardDTOs: [BoardExportDTO] = []
-        for board in boards {
-            let columns = try await Column.query(on: db)
-                .filter(\.$board.$id == board.requireID())
-                .with(\.$cards) { card in
-                    card.with(\.$labels)
-                    card.with(\.$comments) { comment in
-                        comment.with(\.$user)
-                    }
-                    card.with(\.$assignee)
-                }
-                .sort(\.$position, .ascending)
-                .all()
-            
-            let columnDTOs = columns.map { column in
-                ColumnExportDTO(
-                    title: column.title,
-                    position: column.position,
-                    cards: column.cards.map { card in
-                        CardExportDTO(
-                            title: card.title,
-                            description: card.description,
-                            position: card.position,
-                            priority: card.priority,
-                            dueDate: card.dueDate,
-                            isCompleted: card.isCompleted,
-                            comments: card.comments.map { comment in
-                                CommentExportDTO(
-                                    content: comment.text,
-                                    author: comment.user.username,
-                                    createdAt: comment.createdAt
-                                )
-                            },
-                            labels: card.labels.map { $0.name },
-                            assignee: card.assignee?.username
-                        )
-                    }
-                )
-            }
-            
-            boardDTOs.append(BoardExportDTO(
-                title: board.title,
-                columns: columnDTOs,
-                owner: board.owner.username
-            ))
-        }
-        return boardDTOs
-    }
 
     func deleteAccount(req: Request) async throws -> Response {
         let payload = try req.auth.require(UserPayload.self)

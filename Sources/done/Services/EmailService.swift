@@ -6,7 +6,9 @@ struct EmailService: Sendable {
     
     init(app: Application) {
         self.app = app
-        // Configure SMTP from environment if not already configured
+    }
+
+    static func configure(_ app: Application) {
         if let password = Environment.get("SMTP_PASSWORD") {
             let config = SmtpServerConfiguration(
                 hostname: Environment.get("SMTP_HOST") ?? "smtp.purelymail.com",

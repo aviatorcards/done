@@ -18,6 +18,7 @@ public func configure(_ app: Application) async throws {
     }
 
     app.middleware.use(FileMiddleware(publicDirectory: app.directory.publicDirectory))
+    EmailService.configure(app)
 
     app.routes.defaultMaxBodySize = "10mb"
 
@@ -54,7 +55,7 @@ public func configure(_ app: Application) async throws {
     app.migrations.add(AddPasswordResetToUser())
     app.migrations.add(AddInviteCreditsToUser())
     app.migrations.add(MigrateAvatarUrls())
-    // app.migrations.add(SeedAdmin())
+    app.migrations.add(SeedAdmin())
     // app.migrations.add(UpdateAdminPassword())
 
     let jwtSecret: String
