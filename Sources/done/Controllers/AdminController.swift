@@ -43,28 +43,35 @@ struct AdminController: RouteCollection {
     }
 
     func generateManualInvite(req: Request) async throws -> Response {
-        let dto = try req.content.decode(ManualInviteDTO.self)
-        let userID = try req.auth.require(UserPayload.self).userID
-        
-        let count = Int(dto.count ?? "1") ?? 1
-        for _ in 0..<count {
-            let code = String.generateInviteCode()
-            let invite = InviteCode(
-                code: code,
-                email: dto.email,
-                boardID: nil,
-                inviterID: userID
-            )
-            try await invite.save(on: req.db)
-        }
-        
-        if req.headers.contains(name: "HX-Request") {
-            let response = Response(status: .noContent)
-            response.headers.replaceOrAdd(name: "HX-Refresh", value: "true")
+        do {
+            let dto = try req.content.decode(ManualInviteDTO.self)
+            let userID = try req.auth.require(UserPayload.self).userID
+            
+            let countString = dto.count ?? "1"
+            let count = Int(countString) ?? 1
+            
+            for _ in 0..<count {
+                let code = String.generateInviteCode()
+                let invite = InviteCode(
+                    code: code,
+                    email: dto.email,
+                    boardID: nil,
+                    inviterID: userID
+                )
+                try await invite.save(on: req.db)
+            }
+            
+            let response = Response(status: .ok)
+            if req.headers.contains(name: "HX-Request") {
+                response.headers.replaceOrAdd(name: "HX-Location", value: "/admin/invites")
+            } else {
+                return req.redirect(to: "/admin/invites")
+            }
             return response
+        } catch {
+            req.logger.error("Admin invite generation failed: \(error)")
+            throw error
         }
-        
-        return req.redirect(to: "/admin/invites")
     }
 
     func deleteInvite(req: Request) async throws -> Response {

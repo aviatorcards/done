@@ -167,8 +167,9 @@
             <div id="board-container" 
                  hx-get="/boards" 
                  hx-trigger="load delay:100ms"
-                 hx-swap="innerHTML">
-                #extend("partials/board_list")
+                 hx-swap="innerHTML"
+                 class="w-full">
+                #include("partials/board_list")
             </div>
         </div>
     #endexport
