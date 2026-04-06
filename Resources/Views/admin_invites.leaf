@@ -39,7 +39,7 @@
                                 <code class="px-3 py-1 bg-slate-100 dark:bg-obsidian-700 rounded-lg font-mono font-bold text-brand-500">#(invite.code)</code>
                             </td>
                             <td class="px-8 py-6">
-                                #if(invite.usedByID):
+                                #if(invite.isUsed):
                                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-black bg-slate-100 text-slate-400 dark:bg-obsidian-800 dark:text-zinc-500 uppercase tracking-wider">Used</span>
                                 #else:
                                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-black bg-green-100 text-green-600 dark:bg-green-900/20 dark:text-green-400 uppercase tracking-wider">Active</span>
