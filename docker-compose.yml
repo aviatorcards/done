@@ -27,7 +27,7 @@ x-shared_environment: &shared_environment
   DATABASE_USERNAME: &db_username vapor_username
   DATABASE_PASSWORD: &db_password vapor_password
   JWT_SECRET: ${JWT_SECRET:-VBcOUtYP7ARojyYqD4IcBrc9r6AgzSkUdhxpQbMWjEV}
-  BASE_URL: ${BASE_URL:-http://localhost:9876}
+  BASE_URL: ${BASE_URL:-http://localhost:8080}
   ADMIN_EMAIL: ${ADMIN_EMAIL:-tristan@fddl.dev}
 
 services:
@@ -48,10 +48,10 @@ services:
       db:
         condition: service_healthy
     ports:
-      - '9876:9876'
+      - '8080:8080'
     volumes:
       - ./storage:/app/storage
-    command: [ "serve", "--env", "production", "--hostname", "0.0.0.0", "--port", "9876" ]
+    command: [ "serve", "--env", "production", "--hostname", "0.0.0.0", "--port", "8080" ]
   migrate:
     image: done:latest
     build:

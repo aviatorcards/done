@@ -79,13 +79,9 @@ final class User: Model, Content, Authenticatable, @unchecked Sendable {
 
     var isEarlyAdopter: Bool {
         guard let createdAt = createdAt else { return false }
-        // Cutoff: September 24, 2026
-        var components = DateComponents()
-        components.year = 2026
-        components.month = 9
-        components.day = 24
-        guard let cutoff = Calendar.current.date(from: components) else { return false }
-        return createdAt < cutoff
+        // Cutoff: September 24, 2026 00:00:00 UTC
+        let cutoffTimestamp: TimeInterval = 1790208000
+        return createdAt.timeIntervalSince1970 < cutoffTimestamp
     }
 
     enum CodingKeys: String, CodingKey {

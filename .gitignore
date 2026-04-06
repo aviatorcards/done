@@ -18,5 +18,5 @@ default.profraw
 .cursor/
 Public/uploads/
 storage/
-
-
+Dockerfile
+docker-compose.yml

@@ -72,6 +72,20 @@
                         #endif
                     </div>
                     
+                    <div x-data="{ exportOpen: false }" class="relative">
+                        <button @click="exportOpen = !exportOpen" class="glass p-3 rounded-2xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-obsidian-800 transition-colors flex items-center gap-2 font-medium">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                            </svg>
+                            <span class="text-sm md:text-base">Export</span>
+                        </button>
+                        <div x-show="exportOpen" @click.away="exportOpen = false" class="absolute right-0 mt-2 w-48 glass rounded-2xl shadow-xl z-50 overflow-hidden border border-slate-200 dark:border-obsidian-800" x-cloak>
+                            <a href="/boards/#(board.id)/export?format=json" class="block px-4 py-3 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-obsidian-800 transition-colors">Export as JSON</a>
+                            <a href="/boards/#(board.id)/export?format=markdown" class="block px-4 py-3 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-obsidian-800 transition-colors border-t border-slate-100 dark:border-obsidian-900">Export as Markdown</a>
+                            <a href="/boards/#(board.id)/export?format=csv" class="block px-4 py-3 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-obsidian-800 transition-colors border-t border-slate-100 dark:border-obsidian-900">Export as CSV</a>
+                        </div>
+                    </div>
+                    
                     <button 
                         class="glass p-3 rounded-2xl text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center gap-2 font-medium"
                         hx-delete="/boards/#(board.id)"
@@ -82,7 +96,7 @@
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
                         </svg>
-                        <span class="text-sm md:text-base">Delete Board</span>
+                        <span class="text-sm md:text-base">Delete</span>
                     </button>
                 </div>
             </div>
