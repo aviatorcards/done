@@ -1,0 +1,95 @@
+# Docker Compose file for Vapor
+#
+# Install Docker on your system to run and test
+# your Vapor app in a production-like environment.
+#
+# Note: This file is intended for testing and does not
+# implement best practices for a production deployment.
+#
+# Learn more: https://docs.docker.com/compose/reference/
+#
+#   Build images: docker compose build
+#      Start app: docker compose up app
+# Start database: docker compose up db
+# Run migrations: docker compose run migrate
+#       Stop all: docker compose down (add -v to wipe db)
+#
+
+volumes:
+  db_data:
+
+
+x-shared_environment: &shared_environment
+  LOG_LEVEL: ${LOG_LEVEL:-debug}
+  DATABASE_HOST: db
+  DATABASE_PORT: 5432
+  DATABASE_NAME: &db_name vapor_database
+  DATABASE_USERNAME: &db_username vapor_username
+  DATABASE_PASSWORD: &db_password vapor_password
+  JWT_SECRET: ${JWT_SECRET:-VBcOUtYP7ARojyYqD4IcBrc9r6AgzSkUdhxpQbMWjEV}
+  BASE_URL: ${BASE_URL:-http://localhost:9876}
+  ADMIN_EMAIL: ${ADMIN_EMAIL:-tristan@fddl.dev}
+
+services:
+  app:
+    image: done:latest
+    build:
+      context: .
+      network: host
+    environment:
+      <<: *shared_environment
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM: ${SMTP_FROM}
+      CONTACT_EMAIL: ${CONTACT_EMAIL:-done@fddl.dev}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - '9876:9876'
+    volumes:
+      - ./storage:/app/storage
+    command: [ "serve", "--env", "production", "--hostname", "0.0.0.0", "--port", "9876" ]
+  migrate:
+    image: done:latest
+    build:
+      context: .
+      network: host
+    environment:
+      <<: *shared_environment
+    depends_on:
+      db:
+        condition: service_healthy
+    command: [ "migrate", "--yes" ]
+    deploy:
+      replicas: 0
+  revert:
+    image: done:latest
+    build:
+      context: .
+      network: host
+    environment:
+      <<: *shared_environment
+    depends_on:
+      db:
+        condition: service_healthy
+    command: [ "migrate", "--revert", "--yes" ]
+    deploy:
+      replicas: 0
+  db:
+    image: postgres:17-alpine
+    volumes:
+      - db_data:/var/lib/postgresql
+    environment:
+      POSTGRES_USER: *db_username
+      POSTGRES_PASSWORD: *db_password
+      POSTGRES_DB: *db_name
+    ports:
+      - '5433:5432'
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -d $$POSTGRES_DB -U $$POSTGRES_USER" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5

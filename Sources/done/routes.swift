@@ -64,6 +64,7 @@ func routes(_ app: Application) throws {
     try app.register(collection: CardController())
     try app.register(collection: UserController())
     try app.register(collection: AdminController())
+    try app.register(collection: ChecklistController())
 
     app.grouped(AuthMiddleware()).webSocket("board", ":boardID", "live") { req, ws in
         Task {
