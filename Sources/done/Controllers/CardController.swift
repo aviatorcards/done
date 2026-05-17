@@ -18,6 +18,9 @@ struct CardController: RouteCollection {
         let dto = try req.content.decode(CardDTO.self)
         guard let columnID = dto.columnID else { throw Abort(.badRequest) }
         
+        // Ensure user has access to the board this column belongs to
+        _ = try await req.checkColumnAccess(columnID: columnID)
+        
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withFullDate]
         let dueDate = dto.dueDate.flatMap { formatter.date(from: $0) }
@@ -38,9 +41,12 @@ struct CardController: RouteCollection {
 
     func update(req: Request) async throws -> Card {
         let dto = try req.content.decode(CardDTO.self)
-        guard let card = try await Card.find(req.parameters.get("cardID"), on: req.db) else {
-            throw Abort(.notFound)
+        guard let cardID = req.parameters.get("cardID", as: UUID.self) else {
+            throw Abort(.badRequest)
         }
+        
+        // Ensure user has access to this card
+        let (card, _, board) = try await req.checkCardAccess(cardID: cardID)
         
         // Track state change
         let oldIsCompleted = card.isCompleted
@@ -59,12 +65,9 @@ struct CardController: RouteCollection {
         
         // AUTO-MOVE LOGIC: If marked as complete, move to "Done" column
         if card.isCompleted && !oldIsCompleted {
-            let currentColumn = try await card.$column.get(on: req.db)
-            let boardID = currentColumn.$board.id
-            
             // Search for "Done" or "Completed" column in this board
             let columns = try await Column.query(on: req.db)
-                .filter(\.$board.$id == boardID)
+                .filter(\.$board.$id == board.requireID())
                 .all()
             
             if let targetColumn = columns.first(where: { 
@@ -73,7 +76,7 @@ struct CardController: RouteCollection {
                 $0.title.lowercased() == "finished" 
             }) {
                 // Only move if we aren't already in that column
-                if targetColumn.id != currentColumn.id {
+                if targetColumn.id != card.$column.id {
                     card.$column.id = try targetColumn.requireID()
                     
                     // Put it at the top of the "Done" column
@@ -93,7 +96,6 @@ struct CardController: RouteCollection {
         try await card.save(on: req.db)
         
         // Broadcast update
-        let board = try await card.$column.get(on: req.db).$board.get(on: req.db)
         if let boardID = board.id {
             req.application.webSocketManager.broadcast(boardID: boardID, message: "board_updated")
         }
@@ -103,18 +105,31 @@ struct CardController: RouteCollection {
 
     func move(req: Request) async throws -> View {
         let dto = try req.content.decode(CardDTO.self)
-        guard let card = try await Card.find(req.parameters.get("cardID"), on: req.db) else {
-            throw Abort(.notFound)
+        guard let cardID = req.parameters.get("cardID", as: UUID.self) else {
+            throw Abort(.badRequest)
         }
         
-        if let columnID = dto.columnID { card.$column.id = columnID }
+        // Ensure user has access to this card
+        let (card, _, board) = try await req.checkCardAccess(cardID: cardID)
+        
+        if let columnID = dto.columnID { 
+            // If moving to a different column, check access to that column too
+            if columnID != card.$column.id {
+                let (targetColumn, targetBoard) = try await req.checkColumnAccess(columnID: columnID)
+                guard targetBoard.id == board.id else {
+                    // Cannot move card between different boards
+                    throw Abort(.forbidden)
+                }
+                card.$column.id = try targetColumn.requireID()
+            }
+        }
+        
         if let position = dto.position { card.position = position }
         
         try await card.save(on: req.db)
         try await card.$labels.load(on: req.db)
         
         // Broadcast update
-        let board = try await card.$column.get(on: req.db).$board.get(on: req.db)
         if let boardID = board.id {
             req.application.webSocketManager.broadcast(boardID: boardID, message: "board_updated")
         }
@@ -126,19 +141,13 @@ struct CardController: RouteCollection {
     }
 
     func delete(req: Request) async throws -> Response {
-        let userID = try req.auth.require(UserPayload.self).userID
-        guard let card = try await Card.find(req.parameters.get("cardID"), on: req.db) else {
-            throw Abort(.notFound)
+        guard let cardID = req.parameters.get("cardID", as: UUID.self) else {
+            throw Abort(.badRequest)
         }
         
-        // Ensure the user owns the board this card belongs to
-        let column = try await card.$column.get(on: req.db)
-        let board = try await column.$board.get(on: req.db)
-        guard board.$owner.id == userID else {
-            throw Abort(.forbidden)
-        }
-        
-        let cardID = try card.requireID()
+        // Ensure user has access and is the OWNER (consistent with current logic)
+        let (card, _, board) = try await req.checkCardAccess(cardID: cardID)
+        try req.requireBoardOwner(board: board)
         
         // Delete card's labels associations
         try await CardLabel.query(on: req.db)
@@ -149,6 +158,7 @@ struct CardController: RouteCollection {
         try await Comment.query(on: req.db)
             .filter(\.$card.$id == cardID)
             .delete()
+            
         // Broadcast update
         if let boardID = board.id {
             req.application.webSocketManager.broadcast(boardID: boardID, message: "board_updated")
@@ -160,13 +170,19 @@ struct CardController: RouteCollection {
 
     func new(req: Request) async throws -> View {
         let columnID = try? req.query.get(UUID.self, at: "columnID")
+        if let columnID = columnID {
+            // Optional check: if they are trying to open the modal for a specific column, check access
+            _ = try await req.checkColumnAccess(columnID: columnID)
+        }
         return try await req.view.render("partials/card_modal", ["columnID": columnID])
     }
 
     func edit(req: Request) async throws -> View {
-        guard let card = try await Card.find(req.parameters.get("cardID"), on: req.db) else {
-            throw Abort(.notFound)
+        guard let cardID = req.parameters.get("cardID", as: UUID.self) else {
+            throw Abort(.badRequest)
         }
+        
+        let (card, _, _) = try await req.checkCardAccess(cardID: cardID)
         return try await req.view.render("partials/card_edit_modal", ["card": card])
     }
 }

@@ -73,19 +73,8 @@ func routes(_ app: Application) throws {
                     return
                 }
                 
-                let payload = try req.auth.require(UserPayload.self)
-                guard let board = try await Board.find(boardID, on: req.db) else {
-                    try await ws.close(code: .unacceptableData)
-                    return
-                }
-                
-                let isOwner = board.$owner.id == payload.userID
-                let isMember = try await board.$members.query(on: req.db).filter(\User.$id == payload.userID).first() != nil
-                
-                guard isOwner || isMember else {
-                    try await ws.close(code: .policyViolation)
-                    return
-                }
+                // Ensure the user has access
+                _ = try await req.checkBoardAccess(boardID: boardID)
                 
                 req.application.webSocketManager.connect(boardID: boardID, ws: ws)
             } catch {

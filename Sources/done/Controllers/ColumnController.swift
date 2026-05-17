@@ -15,6 +15,9 @@ struct ColumnController: RouteCollection {
     func create(req: Request) async throws -> Column {
         let dto = try req.content.decode(ColumnDTO.self)
         
+        // Ensure user has access to the board
+        _ = try await req.checkBoardAccess(boardID: dto.boardID)
+        
         let position: Int
         if let providedPosition = dto.position {
             position = providedPosition
@@ -32,19 +35,12 @@ struct ColumnController: RouteCollection {
     }
 
     func update(req: Request) async throws -> Column {
-        let userID = try req.auth.require(UserPayload.self).userID
         let dto = try req.content.decode(ColumnDTO.self)
-        guard let column = try await Column.find(req.parameters.get("columnID"), on: req.db) else {
-            throw Abort(.notFound)
+        guard let columnID = req.parameters.get("columnID", as: UUID.self) else {
+            throw Abort(.badRequest)
         }
         
-        let board = try await column.$board.get(on: req.db)
-        let isOwner = board.$owner.id == userID
-        let isMember = try await board.$members.query(on: req.db).filter(\User.$id == userID).first() != nil
-        
-        guard isOwner || isMember else {
-            throw Abort(.forbidden)
-        }
+        let (column, board) = try await req.checkColumnAccess(columnID: columnID)
         
         column.title = dto.title
         if let position = dto.position {
@@ -61,18 +57,12 @@ struct ColumnController: RouteCollection {
     }
 
     func delete(req: Request) async throws -> Response {
-        let userID = try req.auth.require(UserPayload.self).userID
-        guard let column = try await Column.find(req.parameters.get("columnID"), on: req.db) else {
-            throw Abort(.notFound)
+        guard let columnID = req.parameters.get("columnID", as: UUID.self) else {
+            throw Abort(.badRequest)
         }
         
-        // Ensure the user owns the board this column belongs to
-        let board = try await column.$board.get(on: req.db)
-        guard board.$owner.id == userID else {
-            throw Abort(.forbidden)
-        }
-        
-        let columnID = try column.requireID()
+        let (column, board) = try await req.checkColumnAccess(columnID: columnID)
+        try req.requireBoardOwner(board: board)
         
         // Get all cards in this column
         let cards = try await Card.query(on: req.db)
@@ -107,16 +97,13 @@ struct ColumnController: RouteCollection {
     }
 
     func move(req: Request) async throws -> Response {
-        let userID = try req.auth.require(UserPayload.self).userID
         let dto = try req.content.decode(ColumnDTO.self)
-        guard let column = try await Column.find(req.parameters.get("columnID"), on: req.db) else {
-            throw Abort(.notFound)
+        guard let columnID = req.parameters.get("columnID", as: UUID.self) else {
+            throw Abort(.badRequest)
         }
         
-        let board = try await column.$board.get(on: req.db)
-        guard board.$owner.id == userID else {
-            throw Abort(.forbidden)
-        }
+        let (column, board) = try await req.checkColumnAccess(columnID: columnID)
+        try req.requireBoardOwner(board: board)
         
         if let position = dto.position {
             column.position = position

@@ -26,14 +26,14 @@ struct BoardController: RouteCollection {
             throw Abort(.unauthorized)
         }
         
-        guard let board = try await Board.find(req.parameters.get("boardID"), on: req.db) else {
-             throw Abort(.notFound)
+        guard let boardID = req.parameters.get("boardID", as: UUID.self) else {
+            throw Abort(.badRequest)
         }
+        let board = try await Board.find(boardID, on: req.db)
+        guard let board = board else { throw Abort(.notFound) }
         
         // Ensure the current user is the owner
-        guard board.$owner.id == userID else {
-            throw Abort(.forbidden)
-        }
+        try req.requireBoardOwner(board: board)
         
         let inviteDTO = try req.content.decode(InviteDTO.self)
         let invitee = try await User.query(on: req.db).filter(\.$email == inviteDTO.email).first()
@@ -83,15 +83,15 @@ struct BoardController: RouteCollection {
     }
 
     func update(req: Request) async throws -> Board {
-        let userID = try req.auth.require(UserPayload.self).userID
-        guard let board = try await Board.find(req.parameters.get("boardID"), on: req.db) else {
-            throw Abort(.notFound)
+        guard let boardID = req.parameters.get("boardID", as: UUID.self) else {
+            throw Abort(.badRequest)
         }
         
+        let board = try await Board.find(boardID, on: req.db)
+        guard let board = board else { throw Abort(.notFound) }
+        
         // Ensure the user owns the board
-        guard board.$owner.id == userID else {
-            throw Abort(.forbidden)
-        }
+        try req.requireBoardOwner(board: board)
         
         let dto = try req.content.decode(BoardDTO.self)
         board.title = dto.title
@@ -117,22 +117,12 @@ struct BoardController: RouteCollection {
     }
 
     func exportBoard(req: Request) async throws -> Response {
-        let userID = try req.auth.require(UserPayload.self).userID
-        guard let boardIDString = req.parameters.get("boardID"), let boardID = UUID(uuidString: boardIDString) else {
+        guard let boardID = req.parameters.get("boardID", as: UUID.self) else {
             throw Abort(.badRequest)
         }
         
-        guard let board = try await Board.find(boardID, on: req.db) else {
-            throw Abort(.notFound)
-        }
-        
-        // Ensure the user owns the board OR is a member
-        let isOwner = board.$owner.id == userID
-        let isMember = try await board.$members.query(on: req.db).filter(\User.$id == userID).first() != nil
-        
-        guard isOwner || isMember else {
-            throw Abort(.forbidden)
-        }
+        // Ensure the user has access
+        let board = try await req.checkBoardAccess(boardID: boardID)
         
         let formatStr = req.query[String.self, at: "format"] ?? "json"
         guard let format = ImportFormat(rawValue: formatStr.lowercased()) else {
@@ -196,13 +186,15 @@ struct BoardController: RouteCollection {
     }
 
     func show(req: Request) async throws -> View {
-        guard let board = try await Board.find(req.parameters.get("boardID"), on: req.db) else {
-            throw Abort(.notFound)
+        guard let boardID = req.parameters.get("boardID", as: UUID.self) else {
+            throw Abort(.badRequest)
         }
+        
+        // Ensure the user has access
+        let board = try await req.checkBoardAccess(boardID: boardID)
         
         // Load columns and cards
         try await board.$owner.load(on: req.db)
-        guard let boardID = board.id else { throw Abort(.internalServerError) }
         
         let columns: [Column] = try await Column.query(on: req.db)
             .filter(\Column.$board.$id == boardID)
@@ -215,14 +207,6 @@ struct BoardController: RouteCollection {
         let userID = try req.auth.require(UserPayload.self).userID
         guard let user = try await User.find(userID, on: req.db) else {
             throw Abort(.unauthorized)
-        }
-        
-        // Ensure the user owns the board OR is a member
-        let isOwner = board.$owner.id == userID
-        let isMember = try await board.$members.query(on: req.db).filter(\User.$id == userID).first() != nil
-        
-        guard isOwner || isMember else {
-            throw Abort(.forbidden)
         }
         
         try await board.$members.load(on: req.db)
@@ -238,17 +222,15 @@ struct BoardController: RouteCollection {
     }
 
     func delete(req: Request) async throws -> Response {
-        let userID = try req.auth.require(UserPayload.self).userID
-        guard let board = try await Board.find(req.parameters.get("boardID"), on: req.db) else {
-            throw Abort(.notFound)
+        guard let boardID = req.parameters.get("boardID", as: UUID.self) else {
+            throw Abort(.badRequest)
         }
+        
+        let board = try await Board.find(boardID, on: req.db)
+        guard let board = board else { throw Abort(.notFound) }
         
         // Ensure the user owns the board
-        guard board.$owner.id == userID else {
-            throw Abort(.forbidden)
-        }
-        
-        let boardID = try board.requireID()
+        try req.requireBoardOwner(board: board)
         
         // Get all columns in this board
         let columns = try await Column.query(on: req.db)

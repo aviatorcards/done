@@ -32,6 +32,7 @@ x-shared_environment: &shared_environment
 
 services:
   app:
+    restart: unless-stopped
     image: done:latest
     build:
       context: .
@@ -79,6 +80,7 @@ services:
     deploy:
       replicas: 0
   db:
+    restart: unless-stopped
     image: postgres:17-alpine
     volumes:
       - db_data:/var/lib/postgresql
