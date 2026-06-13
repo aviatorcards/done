@@ -1,4 +1,8 @@
-<div class="min-w-[85vw] md:min-w-[320px] max-w-[85vw] md:max-w-[320px] flex flex-col h-full bg-slate-100/50 dark:bg-obsidian-900/50 rounded-[1.5rem] md:rounded-[2.5rem] p-3 md:p-4 group/column column-item" data-column-id="#(column.id)">
+<div :class="layout === 'grid' 
+             ? 'w-full flex flex-col h-[38vh] min-h-[320px] bg-slate-100/50 dark:bg-obsidian-900/50 rounded-[1.5rem] md:rounded-[2rem] p-3 group/column column-item' 
+             : 'min-w-[85vw] md:min-w-[320px] max-w-[85vw] md:max-w-[320px] flex flex-col h-full bg-slate-100/50 dark:bg-obsidian-900/50 rounded-[1.5rem] md:rounded-[2.5rem] p-3 md:p-4 group/column column-item'" 
+     class="transition-colors duration-300"
+     data-column-id="#(column.id)">
     <div class="px-3 md:px-4 py-2 mb-2 md:mb-4 flex justify-between items-center relative group/col-header">
         <div x-data="{ editingTitle: false, title: '#(column.title)' }" class="flex items-center gap-2 md:gap-3">
             <div class="column-drag-handle cursor-grab active:cursor-grabbing text-slate-400 opacity-60 md:opacity-0 md:group-hover/column:opacity-100 transition-opacity p-1">
@@ -39,7 +43,7 @@
                    class="font-black text-slate-800 dark:text-white uppercase tracking-widest text-xs md:text-sm bg-transparent border-b-2 border-brand-500 outline-none w-full"
                    x-init="$watch('editingTitle', value => value && $nextTick(() => $el.focus()))">
             
-            <span class="bg-slate-200 dark:bg-obsidian-800 text-slate-500 px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[10px] md:text-xs font-bold">#(count(column.cards))</span>
+            <span class="bg-slate-200 dark:bg-obsidian-800 text-slate-500 px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[10px] md:text-xs font-bold column-card-count">#(count(column.cards))</span>
         </div>
         <button 
             class="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all opacity-60 md:opacity-0 md:group-hover/column:opacity-100"

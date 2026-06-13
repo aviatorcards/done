@@ -14,12 +14,12 @@ struct CardController: RouteCollection {
         cards.get("new", use: new)
     }
 
-    func create(req: Request) async throws -> Card {
+    func create(req: Request) async throws -> Response {
         let dto = try req.content.decode(CardDTO.self)
         guard let columnID = dto.columnID else { throw Abort(.badRequest) }
         
         // Ensure user has access to the board this column belongs to
-        _ = try await req.checkColumnAccess(columnID: columnID)
+        let (_, board) = try await req.checkColumnAccess(columnID: columnID)
         
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withFullDate]
@@ -36,10 +36,22 @@ struct CardController: RouteCollection {
             assigneeID: dto.assigneeID
         )
         try await card.save(on: req.db)
-        return card
+        
+        // Broadcast update
+        if let boardID = board.id {
+            let clientId = req.headers.first(name: "X-Client-ID")
+            req.application.webSocketManager.broadcast(boardID: boardID, message: "board_updated", skipClientId: clientId)
+        }
+        
+        if req.headers.contains(name: "HX-Request") {
+            let view = try await req.view.render("partials/card", ["card": card]).get()
+            return try await view.encodeResponse(for: req).get()
+        }
+        
+        return try await card.encodeResponse(for: req).get()
     }
 
-    func update(req: Request) async throws -> Card {
+    func update(req: Request) async throws -> Response {
         let dto = try req.content.decode(CardDTO.self)
         guard let cardID = req.parameters.get("cardID", as: UUID.self) else {
             throw Abort(.badRequest)
@@ -50,6 +62,7 @@ struct CardController: RouteCollection {
         
         // Track state change
         let oldIsCompleted = card.isCompleted
+        let oldColumnID = card.$column.id
         
         if let title = dto.title { card.title = title }
         if let description = dto.description { card.description = description }
@@ -93,14 +106,29 @@ struct CardController: RouteCollection {
             }
         }
         
+        let columnChanged = card.$column.id != oldColumnID
         try await card.save(on: req.db)
+        try await card.$labels.load(on: req.db)
+        try await card.$assignee.load(on: req.db)
         
         // Broadcast update
         if let boardID = board.id {
-            req.application.webSocketManager.broadcast(boardID: boardID, message: "board_updated")
+            let clientId = req.headers.first(name: "X-Client-ID")
+            req.application.webSocketManager.broadcast(boardID: boardID, message: "board_updated", skipClientId: clientId)
         }
         
-        return card
+        if req.headers.contains(name: "HX-Request") {
+            if columnChanged {
+                let response = Response(status: .ok)
+                response.headers.add(name: "HX-Refresh", value: "true")
+                return response
+            } else {
+                let view = try await req.view.render("partials/card", ["card": card]).get()
+                return try await view.encodeResponse(for: req).get()
+            }
+        }
+        
+        return try await card.encodeResponse(for: req).get()
     }
 
     func move(req: Request) async throws -> View {
@@ -121,6 +149,14 @@ struct CardController: RouteCollection {
                     throw Abort(.forbidden)
                 }
                 card.$column.id = try targetColumn.requireID()
+                
+                // Automatically toggle isCompleted status based on target column name
+                let title = targetColumn.title.lowercased()
+                if title == "done" || title == "completed" || title == "finished" || title == "archive" || title == "closed" {
+                    card.isCompleted = true
+                } else {
+                    card.isCompleted = false
+                }
             }
         }
         
@@ -128,10 +164,12 @@ struct CardController: RouteCollection {
         
         try await card.save(on: req.db)
         try await card.$labels.load(on: req.db)
+        try await card.$assignee.load(on: req.db)
         
         // Broadcast update
         if let boardID = board.id {
-            req.application.webSocketManager.broadcast(boardID: boardID, message: "board_updated")
+            let clientId = req.headers.first(name: "X-Client-ID")
+            req.application.webSocketManager.broadcast(boardID: boardID, message: "board_updated", skipClientId: clientId)
         }
         
         // After move, return the card fragment for HTMX
@@ -161,7 +199,8 @@ struct CardController: RouteCollection {
             
         // Broadcast update
         if let boardID = board.id {
-            req.application.webSocketManager.broadcast(boardID: boardID, message: "board_updated")
+            let clientId = req.headers.first(name: "X-Client-ID")
+            req.application.webSocketManager.broadcast(boardID: boardID, message: "board_updated", skipClientId: clientId)
         }
             
         try await card.delete(on: req.db)

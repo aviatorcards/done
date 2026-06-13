@@ -16,7 +16,7 @@ struct ColumnController: RouteCollection {
         let dto = try req.content.decode(ColumnDTO.self)
         
         // Ensure user has access to the board
-        _ = try await req.checkBoardAccess(boardID: dto.boardID)
+        let board = try await req.checkBoardAccess(boardID: dto.boardID)
         
         let position: Int
         if let providedPosition = dto.position {
@@ -31,6 +31,13 @@ struct ColumnController: RouteCollection {
         
         let column = Column(title: dto.title, position: position, boardID: dto.boardID)
         try await column.save(on: req.db)
+        
+        // Broadcast update
+        if let boardID = board.id {
+            let clientId = req.headers.first(name: "X-Client-ID")
+            req.application.webSocketManager.broadcast(boardID: boardID, message: "board_updated", skipClientId: clientId)
+        }
+        
         return column
     }
 
@@ -50,7 +57,8 @@ struct ColumnController: RouteCollection {
         
         // Broadcast update
         if let boardID = board.id {
-            req.application.webSocketManager.broadcast(boardID: boardID, message: "column_updated")
+            let clientId = req.headers.first(name: "X-Client-ID")
+            req.application.webSocketManager.broadcast(boardID: boardID, message: "column_updated", skipClientId: clientId)
         }
         
         return column
@@ -89,30 +97,33 @@ struct ColumnController: RouteCollection {
         }
         // Broadcast update
         if let boardID = board.id {
-            req.application.webSocketManager.broadcast(boardID: boardID, message: "board_updated")
+            let clientId = req.headers.first(name: "X-Client-ID")
+            req.application.webSocketManager.broadcast(boardID: boardID, message: "board_updated", skipClientId: clientId)
         }
             
         try await column.delete(on: req.db)
         return Response(status: .ok)
     }
 
+    struct MoveColumnDTO: Content {
+        var position: Int
+    }
+
     func move(req: Request) async throws -> Response {
-        let dto = try req.content.decode(ColumnDTO.self)
+        let dto = try req.content.decode(MoveColumnDTO.self)
         guard let columnID = req.parameters.get("columnID", as: UUID.self) else {
             throw Abort(.badRequest)
         }
         
         let (column, board) = try await req.checkColumnAccess(columnID: columnID)
-        try req.requireBoardOwner(board: board)
         
-        if let position = dto.position {
-            column.position = position
-            try await column.save(on: req.db)
-            
-            // Broadcast update
-            if let boardID = board.id {
-                req.application.webSocketManager.broadcast(boardID: boardID, message: "board_updated")
-            }
+        column.position = dto.position
+        try await column.save(on: req.db)
+        
+        // Broadcast update
+        if let boardID = board.id {
+            let clientId = req.headers.first(name: "X-Client-ID")
+            req.application.webSocketManager.broadcast(boardID: boardID, message: "board_updated", skipClientId: clientId)
         }
         
         return Response(status: .ok)

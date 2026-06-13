@@ -68,17 +68,17 @@ final class Card: Model, Content, @unchecked Sendable {
     var priorityDisplay: (String, String) {
         switch priority.lowercased() {
         case "high":
-            return ("‼️ High", "text-red-600 bg-red-100 dark:bg-red-900/30")
+            return ("🚨 Urgent Repair", "text-red-600 bg-red-100 dark:bg-red-900/30")
         case "low":
-            return ("😴 Low", "text-slate-500 bg-slate-100 dark:bg-zinc-800")
+            return ("📅 Scheduled Maintenance", "text-blue-500 bg-blue-100 dark:bg-blue-900/30")
         default:
-            return ("⚡️ Medium", "text-amber-600 bg-amber-100 dark:bg-amber-900/30")
+            return ("🔧 Active Service", "text-amber-600 bg-amber-100 dark:bg-amber-900/30")
         }
     }
 
     enum CodingKeys: String, CodingKey {
         case id, title, description, position, dueDate = "due_date", priority, isCompleted = "is_completed", column, assignee, labels, comments, createdAt = "created_at", updatedAt = "updated_at"
-        case formattedDueDate, priorityDisplay, safeLabels, safeAssignee
+        case formattedDueDate, priorityDisplay, safeLabels, safeAssignee, columnID = "column_id"
     }
 
     func encode(to encoder: any Encoder) throws {
@@ -91,6 +91,7 @@ final class Card: Model, Content, @unchecked Sendable {
         try container.encode(priority, forKey: .priority)
         try container.encode(isCompleted, forKey: .isCompleted)
         try container.encodeIfPresent(formattedDueDate, forKey: .formattedDueDate)
+        try container.encode(self.$column.id, forKey: .columnID)
         
         let display = priorityDisplay
         try container.encode(["text": display.0, "class": display.1], forKey: .priorityDisplay)

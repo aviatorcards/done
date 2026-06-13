@@ -76,7 +76,8 @@ func routes(_ app: Application) throws {
                 // Ensure the user has access
                 _ = try await req.checkBoardAccess(boardID: boardID)
                 
-                req.application.webSocketManager.connect(boardID: boardID, ws: ws)
+                let clientId = req.query[String.self, at: "clientId"]
+                req.application.webSocketManager.connect(boardID: boardID, ws: ws, clientId: clientId)
             } catch {
                 try? await ws.close(code: .policyViolation)
             }

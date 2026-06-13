@@ -12,6 +12,7 @@ struct BoardController: RouteCollection {
             board.patch(use: update)
             board.delete(use: delete)
             board.post("members", use: inviteMember)
+            board.delete("members", ":userID", use: removeMember)
             board.get("export", use: exportBoard)
         }
     }
@@ -78,6 +79,55 @@ struct BoardController: RouteCollection {
                 inviterName: inviter.username
             )
         }
+        
+        return Response(status: .ok)
+    }
+
+    func removeMember(req: Request) async throws -> Response {
+        let userID = try req.auth.require(UserPayload.self).userID
+        guard let boardID = req.parameters.get("boardID", as: UUID.self) else {
+            throw Abort(.badRequest)
+        }
+        guard let memberID = req.parameters.get("userID", as: UUID.self) else {
+            throw Abort(.badRequest)
+        }
+        let board = try await Board.find(boardID, on: req.db)
+        guard let board = board else { throw Abort(.notFound) }
+        
+        // Ensure the current user is either the owner of the board or the member removing themselves
+        let isOwner = board.$owner.id == userID
+        let isSelf = memberID == userID
+        
+        guard isOwner || isSelf else {
+            throw Abort(.forbidden)
+        }
+        
+        // Find the member record
+        guard let memberRecord = try await BoardMember.query(on: req.db)
+            .filter(\.$board.$id == boardID)
+            .filter(\.$user.$id == memberID)
+            .first() else {
+            throw Abort(.notFound, reason: "User is not a member of this board.")
+        }
+        
+        try await memberRecord.delete(on: req.db)
+        
+        // Clean up card assignments for this user on this board
+        let columns = try await Column.query(on: req.db)
+            .filter(\.$board.$id == boardID)
+            .all()
+        let columnIDs = try columns.map { try $0.requireID() }
+        
+        if !columnIDs.isEmpty {
+            try await Card.query(on: req.db)
+                .filter(\.$column.$id ~~ columnIDs)
+                .filter(\.$assignee.$id == memberID)
+                .set(\.$assignee.$id, to: nil)
+                .update()
+        }
+        
+        // Broadcast update via web socket
+        req.application.webSocketManager.broadcast(boardID: boardID, message: "board_updated")
         
         return Response(status: .ok)
     }
@@ -175,12 +225,23 @@ struct BoardController: RouteCollection {
         let board = Board(title: dto.title, ownerID: userID)
         try await board.save(on: req.db)
         
-        // Add default columns
-        let todo = Column(title: "To Do", position: 0, boardID: try board.requireID())
-        let inProgress = Column(title: "In Progress", position: 1, boardID: try board.requireID())
-        let done = Column(title: "Done", position: 2, boardID: try board.requireID())
+        let titleLower = dto.title.lowercased()
+        let isAutomotive = ["bay", "auto", "shop", "car", "vehicle", "mechanic", "garage"].contains { keyword in
+            titleLower.contains(keyword)
+        }
         
-        try await [todo, inProgress, done].create(on: req.db)
+        var columns: [Column] = []
+        if isAutomotive {
+            for i in 1...8 {
+                columns.append(Column(title: "Bay \(i)", position: i - 1, boardID: try board.requireID()))
+            }
+        } else {
+            columns.append(Column(title: "To Do", position: 0, boardID: try board.requireID()))
+            columns.append(Column(title: "In Progress", position: 1, boardID: try board.requireID()))
+            columns.append(Column(title: "Done", position: 2, boardID: try board.requireID()))
+        }
+        
+        try await columns.create(on: req.db)
         
         return board
     }

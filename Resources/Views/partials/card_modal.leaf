@@ -23,8 +23,9 @@
 
         <form hx-post="/cards" 
               hx-ext="json-enc"
-              hx-swap="none"
-              hx-on::after-request="if(event.detail.successful) { window.location.reload(); }"
+              hx-target=".card-list[data-column-id='#(columnID)']"
+              hx-swap="beforeend"
+              hx-on::after-request="if(event.detail.successful) { document.getElementById('card-modal').remove(); window.updateColumnCount('#(columnID)'); }"
               class="space-y-6">
             <input type="hidden" name="column_id" value="#(columnID)">
             

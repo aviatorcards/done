@@ -17,7 +17,11 @@
             <div class="flex items-center gap-2">
                 <button hx-delete="/cards/#(card.id)"
                         hx-confirm="Are you sure you want to delete this card?"
-                        hx-on::after-request="if(event.detail.successful) window.location.reload()"
+                        hx-target="[data-id='#(card.id)']"
+                        hx-swap="outerHTML"
+                        x-data="{ colId: null }"
+                        x-init="colId = document.querySelector('[data-id=\'#(card.id)\']')?.closest('[data-column-id]')?.dataset.columnId"
+                        hx-on::after-request="if(event.detail.successful) { document.getElementById('card-edit-modal').remove(); if (colId) window.updateColumnCount(colId); }"
                         class="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-colors text-red-500">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -34,8 +38,9 @@
         <form hx-patch="/cards/#(card.id)" 
               hx-ext="json-enc"
               :hx-vals="`js:{is_completed: document.getElementById('edit-completed').checked}`"
-              hx-swap="none"
-              hx-on::after-request="if(event.detail.successful) { window.location.reload(); }"
+              hx-target="[data-id='#(card.id)']"
+              hx-swap="outerHTML"
+              hx-on::after-request="if(event.detail.successful && !event.detail.xhr.getResponseHeader('HX-Refresh')) { document.getElementById('card-edit-modal').remove(); }"
               class="space-y-6">
             
             <div class="space-y-2">

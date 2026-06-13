@@ -85,6 +85,9 @@
                 hx-target="closest .card"
                 hx-swap="outerHTML"
                 hx-headers='js:{"Authorization": `Bearer ${localStorage.getItem("token")}`}'
+                x-data="{ colId: null }"
+                x-init="colId = $el.closest('[data-column-id]').dataset.columnId"
+                hx-on::after-request="if(event.detail.successful) { window.updateColumnCount(colId); }"
                 @click.stop
             >
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">

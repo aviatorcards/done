@@ -7,20 +7,20 @@ import NIOConcurrencyHelpers
 final class WebSocketManager: Sendable {
     private let app: Application
     private let lock: NIOLock = .init()
-    private let connections: NIOLockedValueBox<[UUID: [UUID: WebSocket]]>
+    private let connections: NIOLockedValueBox<[UUID: [UUID: (ws: WebSocket, clientId: String?)]]>
 
     init(app: Application) {
         self.app = app
         self.connections = .init([:])
     }
     
-    func connect(boardID: UUID, ws: WebSocket) {
+    func connect(boardID: UUID, ws: WebSocket, clientId: String?) {
         let connectionID = UUID()
         self.connections.withLockedValue { dict in
             if dict[boardID] == nil {
                 dict[boardID] = [:]
             }
-            dict[boardID]?[connectionID] = ws
+            dict[boardID]?[connectionID] = (ws, clientId)
         }
         
         ws.onClose.whenComplete { _ in
@@ -30,12 +30,15 @@ final class WebSocketManager: Sendable {
         }
     }
     
-    func broadcast(boardID: UUID, message: String) {
+    func broadcast(boardID: UUID, message: String, skipClientId: String? = nil) {
         let boardConnections = self.connections.withLockedValue { dict in
             dict[boardID]
         }
         
-        boardConnections?.values.forEach { ws in
+        boardConnections?.values.forEach { (ws, clientId) in
+            if let skip = skipClientId, let cid = clientId, skip == cid {
+                return
+            }
             ws.send(message)
         }
     }
