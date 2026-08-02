@@ -8,6 +8,8 @@ struct AuthController: RouteCollection {
         auth.post("login", use: login)
         auth.get("logout", use: logout)
 
+        routes.get("forgot-password", use: renderForgotPassword)
+        routes.post("forgot-password", use: handleForgotPassword)
         routes.get("reset-password", use: renderResetPassword)
         routes.post("reset-password", use: handleResetPassword)
     }
@@ -44,8 +46,10 @@ struct AuthController: RouteCollection {
         }
 
         let passwordHash = try Bcrypt.hash(password)
+        let email = (dto.email ?? "").trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let username = (dto.username ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         let user = User(
-            username: dto.username ?? "", email: dto.email ?? "", passwordHash: passwordHash)
+            username: username, email: email, passwordHash: passwordHash)
         try await user.save(on: req.db)
 
         // Mark the invite as used and handle board membership
@@ -79,10 +83,11 @@ struct AuthController: RouteCollection {
     func login(req: Request) async throws -> Response {
         let dto = try req.content.decode(UserDTO.self)
         let identifier = (dto.email ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let emailIdentifier = identifier.lowercased()
 
         let user = try await User.query(on: req.db)
             .group(.or) { qb in
-                qb.filter(\.$email == identifier)
+                qb.filter(\.$email == emailIdentifier)
                 qb.filter(\.$username == identifier)
             }
             .first()
@@ -136,6 +141,36 @@ struct AuthController: RouteCollection {
         return try await req.view.render("reset_password", ["token": token, "email": user.email])
     }
 
+    func renderForgotPassword(req: Request) async throws -> View {
+        try await req.view.render("forgot_password", ["title": "Forgot Password"])
+    }
+
+    func handleForgotPassword(req: Request) async throws -> Response {
+        struct ForgotPasswordRequest: Content {
+            let email: String
+        }
+        
+        let dto = try req.content.decode(ForgotPasswordRequest.self)
+        let email = dto.email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        
+        if let user = try await User.query(on: req.db)
+            .filter(\.$email == email)
+            .first() {
+            let token = [UInt8].random(count: 32).hex
+            user.resetToken = token
+            user.resetTokenExpiresAt = Date().addingTimeInterval(24 * 60 * 60) // 24 hours
+            try await user.save(on: req.db)
+            
+            try await req.application.emailService.sendPasswordReset(to: user.email, token: token)
+        } else {
+            req.logger.info("Password reset requested for non-existent email: \(email)")
+        }
+        
+        let response = Response(status: .ok)
+        try response.content.encode(["status": "success", "reason": "If a user is registered with that email, a password reset link has been sent."], as: .json)
+        return response
+    }
+
     func handleResetPassword(req: Request) async throws -> Response {
         let dto = try req.content.decode(UserDTO.self)
         guard let token = dto.inviteCode ?? req.query[String.self, at: "token"] else {  // We reuse inviteCode from DTO for simplicity
@@ -144,6 +179,10 @@ struct AuthController: RouteCollection {
 
         guard let newPassword = dto.password, !newPassword.isEmpty else {
             throw Abort(.badRequest, reason: "New password is required")
+        }
+
+        guard newPassword.count >= 8 else {
+            throw Abort(.badRequest, reason: "Password must be at least 8 characters long")
         }
 
         guard
@@ -162,6 +201,12 @@ struct AuthController: RouteCollection {
         user.resetToken = nil
         user.resetTokenExpiresAt = nil
         try await user.save(on: req.db)
+
+        if req.headers.contentType == .json {
+            let response = Response(status: .ok)
+            try response.content.encode(["status": "success", "reason": "Password updated successfully"], as: .json)
+            return response
+        }
 
         return req.redirect(to: "/login")
     }

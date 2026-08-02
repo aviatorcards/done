@@ -4,7 +4,7 @@
             <div class="col-span-2 md:col-span-2 flex flex-col items-center md:items-start text-center md:text-left space-y-6">
                 <div class="flex items-center gap-3">
                     <img :src="darkMode ? '/images/logo_dark.png' : '/images/logo.png'" alt="Logo" class="w-10 h-10 rounded-xl">
-                    <span class="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-brand-600 to-indigo-500">Done.</span>
+                    <span class="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-brand-500 to-red-600">Done.</span>
                 </div>
                 <p class="text-slate-500 dark:text-slate-400 max-w-sm leading-relaxed font-medium">
                     The productivity tool that stays out of your way. Built for makers, by makers.

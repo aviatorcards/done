@@ -231,9 +231,44 @@ struct BoardController: RouteCollection {
         }
         
         var columns: [Column] = []
-        if isAutomotive {
-            for i in 1...8 {
-                columns.append(Column(title: "Bay \(i)", position: i - 1, boardID: try board.requireID()))
+        if titleLower.contains("dispatch") || titleLower.contains("inspect") || titleLower.contains("shop") {
+            // Xtime Inspect Dashboard Columns
+            let colTitles = [
+                "I - Awaiting Dispatch",
+                "II - In Inspection",
+                "III - Pending Approval",
+                "IV - In Repair",
+                "V - Pending Review"
+            ]
+            for (index, colTitle) in colTitles.enumerated() {
+                columns.append(Column(title: colTitle, position: index, boardID: try board.requireID()))
+            }
+        } else if titleLower.contains("scheduling") || titleLower.contains("intake") || titleLower.contains("appointment") {
+            // Xtime Scheduling/Arrived Dashboard Columns
+            let colTitles = [
+                "Not Arrived",
+                "Checked In",
+                "In Progress",
+                "Hold for Parts",
+                "Hold for Approval",
+                "Complete"
+            ]
+            for (index, colTitle) in colTitles.enumerated() {
+                columns.append(Column(title: colTitle, position: index, boardID: try board.requireID()))
+            }
+        } else if isAutomotive {
+            // Unified Service Flow Columns
+            let colTitles = [
+                "Scheduled",
+                "In Inspection",
+                "Pending Approval",
+                "In Repair",
+                "Hold for Parts",
+                "QC & Review",
+                "Done"
+            ]
+            for (index, colTitle) in colTitles.enumerated() {
+                columns.append(Column(title: colTitle, position: index, boardID: try board.requireID()))
             }
         } else {
             columns.append(Column(title: "To Do", position: 0, boardID: try board.requireID()))

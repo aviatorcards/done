@@ -71,7 +71,7 @@
                  class="fixed inset-0 z-50 flex items-center justify-center p-4"
                  x-cloak>
                 <!-- Backdrop -->
-                <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-md" @click="showManualModal = false"
+                <div class="absolute inset-0 bg-obsidian-950/60 backdrop-blur-md" @click="showManualModal = false"
                      x-transition:enter="transition ease-out duration-300"
                      x-transition:enter-start="opacity-0"
                      x-transition:enter-end="opacity-100"

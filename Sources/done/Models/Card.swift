@@ -79,6 +79,7 @@ final class Card: Model, Content, @unchecked Sendable {
     enum CodingKeys: String, CodingKey {
         case id, title, description, position, dueDate = "due_date", priority, isCompleted = "is_completed", column, assignee, labels, comments, createdAt = "created_at", updatedAt = "updated_at"
         case formattedDueDate, priorityDisplay, safeLabels, safeAssignee, columnID = "column_id"
+        case isAutomotiveCard, roNumber, tagNumber, vehicleDetails, customerName
     }
 
     func encode(to encoder: any Encoder) throws {
@@ -99,6 +100,44 @@ final class Card: Model, Content, @unchecked Sendable {
         // Always encode labels as an array for Leaf
         try container.encode(self.$labels.value ?? [], forKey: .safeLabels)
         try container.encode(self.$assignee.value, forKey: .safeAssignee)
+        
+        // Parse automotive details transiently from title
+        var roNumber: String? = nil
+        var tagNumber: String? = nil
+        var vehicleDetails: String = title
+        var customerName: String? = nil
+        var isAutomotiveCard = false
+        
+        let trimmedTitle = title.trimmingCharacters(in: .whitespaces)
+        if trimmedTitle.hasPrefix("[") && trimmedTitle.contains("]") {
+            let parts = trimmedTitle.split(separator: "]", maxSplits: 1)
+            if parts.count == 2 {
+                let bracketContent = parts[0].dropFirst().trimmingCharacters(in: .whitespaces)
+                let subBracketParts = bracketContent.components(separatedBy: " | ")
+                if subBracketParts.count >= 2 {
+                    roNumber = subBracketParts[0].trimmingCharacters(in: .whitespaces)
+                    tagNumber = subBracketParts[1].trimmingCharacters(in: .whitespaces)
+                } else {
+                    roNumber = bracketContent
+                }
+                
+                let rest = parts[1].trimmingCharacters(in: .whitespaces)
+                let subparts = rest.components(separatedBy: " - ")
+                if subparts.count >= 2 {
+                    vehicleDetails = subparts[0].trimmingCharacters(in: .whitespaces)
+                    customerName = subparts.dropFirst().joined(separator: " - ").trimmingCharacters(in: .whitespaces)
+                    isAutomotiveCard = true
+                } else {
+                    vehicleDetails = rest
+                }
+            }
+        }
+        
+        try container.encode(isAutomotiveCard, forKey: .isAutomotiveCard)
+        try container.encodeIfPresent(roNumber, forKey: .roNumber)
+        try container.encodeIfPresent(tagNumber, forKey: .tagNumber)
+        try container.encode(vehicleDetails, forKey: .vehicleDetails)
+        try container.encodeIfPresent(customerName, forKey: .customerName)
         
         if let createdAt = createdAt { try container.encode(createdAt, forKey: .createdAt) }
         if let updatedAt = updatedAt { try container.encode(updatedAt, forKey: .updatedAt) }

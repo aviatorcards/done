@@ -30,7 +30,7 @@ struct UserDTO: Content {
 extension UserDTO: Validatable {
     static func validations(_ validations: inout Validations) {
         validations.add("email", as: String.self, is: .email, required: false)
-        validations.add("username", as: String.self, is: .count(3...), required: false)
+        validations.add("username", as: String.self, is: .count(3...) && .characterSet(CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-_"))), required: false)
         validations.add("password", as: String.self, is: .count(8...), required: false)
     }
 }

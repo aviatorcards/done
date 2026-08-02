@@ -1,7 +1,7 @@
 <div id="card-modal" 
      x-data="{ show: true }" 
      x-show="show" 
-     class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm"
+     class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-obsidian-950/60 backdrop-blur-md"
      x-transition:enter="transition ease-out duration-300"
      x-transition:enter-start="opacity-0"
      x-transition:enter-end="opacity-100"
@@ -35,10 +35,27 @@
                        class="w-full px-5 py-4 rounded-2xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-all">
             </div>
 
-            <div class="space-y-2">
-                <label class="text-sm font-semibold text-slate-700 dark:text-zinc-300 ml-1">Description</label>
-                <textarea name="description" rows="3" placeholder="Add some details..." 
-                          class="w-full px-5 py-4 rounded-2xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-all resize-none"></textarea>
+            <div class="space-y-2" x-data="{ activeTab: 'write', descText: '' }">
+                <div class="flex justify-between items-center ml-1">
+                    <label class="text-sm font-semibold text-slate-700 dark:text-zinc-300">Description</label>
+                    <div class="flex bg-slate-100 dark:bg-zinc-800/80 p-0.5 rounded-lg text-xs">
+                        <button type="button" @click="activeTab = 'write'" 
+                                :class="activeTab === 'write' ? 'bg-white dark:bg-zinc-700 text-brand-600 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'"
+                                class="px-3 py-1 rounded-md font-bold transition-all">Write</button>
+                        <button type="button" @click="activeTab = 'preview'" 
+                                :class="activeTab === 'preview' ? 'bg-white dark:bg-zinc-700 text-brand-600 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'"
+                                class="px-3 py-1 rounded-md font-bold transition-all">Preview</button>
+                    </div>
+                </div>
+                
+                <div x-show="activeTab === 'write'">
+                    <textarea name="description" rows="4" x-model="descText" placeholder="Add some details using Markdown..." 
+                              class="w-full px-5 py-4 rounded-2xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-all resize-none font-medium text-slate-700 dark:text-slate-200"></textarea>
+                </div>
+                
+                <div x-show="activeTab === 'preview'" class="w-full min-h-[112px] px-5 py-4 rounded-2xl bg-slate-50/50 dark:bg-zinc-900/45 border border-slate-200 dark:border-zinc-700/60 text-slate-700 dark:text-slate-350 markdown-body overflow-y-auto max-h-48"
+                     x-html="descText.trim() ? marked.parse(descText) : '<span class=\'text-slate-400 dark:text-slate-500 italic\'>Nothing to preview</span>'">
+                </div>
             </div>
 
             <div class="grid grid-cols-2 gap-4">

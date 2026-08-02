@@ -1,5 +1,15 @@
 <div class="card bg-white dark:bg-obsidian-800 p-3 md:p-5 rounded-[1.25rem] md:rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-200/50 dark:border-obsidian-700/50 group/card relative"
      data-id="#(card.id)"
+     data-title="#(card.title)"
+     data-desc="#(card.description)"
+     data-priority="#(card.priority)"
+     data-assignee="#if(card.safeAssignee):#(card.safeAssignee.id)#endif"
+     data-labels="#for(label in card.safeLabels):#(label.id),#endfor"
+     data-completed="#if(card.is_completed):true#else:false#endif"
+     data-ro="#(card.roNumber)"
+     data-tag="#(card.tagNumber)"
+     data-customer="#(card.customerName)"
+     x-show="shouldShowCardByEl($el)"
      hx-get="/cards/#(card.id)/edit"
      hx-target="body"
      hx-swap="beforeend">
@@ -21,12 +31,39 @@
                         </svg>
                     </div>
                 #endif
-                <h4 class="font-bold text-slate-800 dark:text-slate-100 leading-tight text-sm md:text-base group-hover/card:text-brand-600 transition-colors #if(card.is_completed): line-through text-slate-400 #endif">#(card.title)</h4>
+                #if(card.isAutomotiveCard):
+                    <div class="flex flex-col gap-0.5 w-full">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-[9px] font-black bg-slate-100 dark:bg-obsidian-950 border border-slate-200 dark:border-obsidian-700 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded-lg shrink-0">
+                                📋 #(card.roNumber)
+                            </span>
+                            #if(card.tagNumber):
+                                <span class="text-[9px] font-black bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 text-amber-700 dark:text-amber-400 px-2 py-0.5 rounded-lg shrink-0">
+                                    🔑 #(card.tagNumber)
+                                </span>
+                            #endif
+                        </div>
+                        <h4 class="font-extrabold text-slate-800 dark:text-slate-100 leading-snug text-sm md:text-[15px] group-hover/card:text-brand-600 transition-colors mt-1.5 #if(card.is_completed): line-through text-slate-400 #endif">
+                            #(card.vehicleDetails)
+                        </h4>
+                        <span class="text-[10px] md:text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                            #(card.customerName)
+                        </span>
+                    </div>
+                #else:
+                    <h4 class="font-bold text-slate-800 dark:text-slate-100 leading-tight text-sm md:text-base group-hover/card:text-brand-600 transition-colors #if(card.is_completed): line-through text-slate-400 #endif">#(card.title)</h4>
+                #endif
             </div>
         </div>
         
         #if(card.description):
-            <p class="text-[10px] md:text-xs text-slate-500 dark:text-slate-400/80 line-clamp-2">#(card.description)</p>
+            <div x-data class="text-[10px] md:text-xs text-slate-500 dark:text-slate-400/80 line-clamp-2 markdown-body mt-1"
+                 x-html="marked.parseInline($el.querySelector('.raw-desc').textContent)">
+                <span class="raw-desc hidden">#(card.description)</span>
+            </div>
         #endif
         
         <div class="flex flex-wrap gap-1.5 md:gap-2 mt-1 md:mt-2">
@@ -46,7 +83,7 @@
         <div class="flex items-center justify-between mt-2 md:mt-3">
             <div class="flex gap-1">
                 #for(label in card.safeLabels):
-                    <span class="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full" style="background-color: #(label.colorHex)"></span>
+                    <span class="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full" style="background-color: #(label.colorHex)" data-label-id="#(label.id)" data-label-name="#(label.name)" title="#(label.name)"></span>
                 #endfor
             </div>
             <div class="flex items-center gap-2">

@@ -45,6 +45,13 @@ services:
       SMTP_PASSWORD: ${SMTP_PASSWORD}
       SMTP_FROM: ${SMTP_FROM}
       CONTACT_EMAIL: ${CONTACT_EMAIL:-done@fddl.dev}
+      COX_AUTO_MOCK_MODE: ${COX_AUTO_MOCK_MODE:-true}
+      COX_API_CLIENT_ID: ${COX_API_CLIENT_ID}
+      COX_API_CLIENT_SECRET: ${COX_API_CLIENT_SECRET}
+      COX_API_BASE_URL: ${COX_API_BASE_URL}
+      COX_API_TOKEN_URL: ${COX_API_TOKEN_URL}
+      COX_API_KEY: ${COX_API_KEY}
+      COX_WEBHOOK_SECRET: ${COX_WEBHOOK_SECRET}
     depends_on:
       db:
         condition: service_healthy
